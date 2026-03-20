@@ -88,7 +88,7 @@ Game state is persisted in Upstash Redis (via Vercel Marketplace). The client li
 
 - All reads must use Zod schema validation (`.safeParse()`)
 - Use key prefixes to namespace data (e.g. `game:`, `player:`)
-- Environment variables: `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` in `.env.local`
+- Environment variables: `KV_REST_API_URL` and `KV_REST_API_TOKEN` in `.env.local`
 
 ## CI/CD
 

@@ -9,4 +9,7 @@ import { Redis } from '@upstash/redis'
  * Add domain-specific helpers here as the game takes shape.
  */
 
-export const kv = Redis.fromEnv()
+export const kv = new Redis({
+  url: process.env.KV_REST_API_URL!,
+  token: process.env.KV_REST_API_TOKEN!,
+})
