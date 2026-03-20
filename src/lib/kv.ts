@@ -1,7 +1,7 @@
-import { kv } from '@vercel/kv'
+import { Redis } from '@upstash/redis'
 
 /**
- * Vercel KV helper module.
+ * Upstash Redis client for persistent game state.
  *
  * All reads must use Zod schema validation (.safeParse()).
  * Use key prefixes to namespace data (e.g. 'game:', 'player:').
@@ -9,4 +9,4 @@ import { kv } from '@vercel/kv'
  * Add domain-specific helpers here as the game takes shape.
  */
 
-export { kv }
+export const kv = Redis.fromEnv()

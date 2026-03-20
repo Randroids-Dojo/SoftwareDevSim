@@ -26,7 +26,7 @@ Some ideas to get you started:
 # Install dependencies
 npm install
 
-# Copy environment template and fill in your Vercel KV credentials
+# Copy environment template and fill in your Upstash Redis credentials
 cp .env.local.example .env.local
 
 # Start development server
@@ -37,7 +37,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Environment Variables
 
-This project uses [Vercel KV](https://vercel.com/docs/storage/vercel-kv) (Upstash Redis) for persistent storage. You'll need to set up a KV store in your Vercel dashboard and copy the credentials to `.env.local`.
+This project uses [Upstash Redis](https://vercel.com/marketplace?category=storage&search=redis) for persistent storage. Install the Upstash Redis integration from the Vercel Marketplace, then copy the credentials to `.env.local`.
 
 See `.env.local.example` for the required variables.
 
@@ -45,7 +45,7 @@ See `.env.local.example` for the required variables.
 
 - **Next.js** (App Router, TypeScript strict mode)
 - **Tailwind CSS** — styling
-- **Vercel KV** (Upstash Redis) — persistent game state
+- **Upstash Redis** — persistent game state
 - **Zod** — runtime validation
 
 ## Scripts

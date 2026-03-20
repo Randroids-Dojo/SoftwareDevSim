@@ -9,7 +9,7 @@
 **Title:** SoftwareDevSim
 **Genre:** Simulation / Management
 **Platform:** Web (browser-based)
-**Tech Stack:** Next.js, TypeScript, Vercel KV
+**Tech Stack:** Next.js, TypeScript, Upstash Redis
 
 ### Elevator Pitch
 
@@ -81,7 +81,7 @@
 
 ### State Management
 
-<!-- How is game state stored and synchronized? (Vercel KV) -->
+<!-- How is game state stored and synchronized? (Upstash Redis) -->
 
 ### API Routes
 

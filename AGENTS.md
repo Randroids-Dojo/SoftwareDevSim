@@ -4,7 +4,7 @@
 
 - **Next.js** (App Router, TypeScript strict mode)
 - **Tailwind CSS** — styling
-- **Vercel KV** (Upstash Redis) — persistent game state
+- **Upstash Redis** — persistent game state
 - **Zod** — runtime validation
 
 ## Commands
@@ -82,13 +82,13 @@ npm run test:smoke
 
 Always run `npm run type-check` after code changes. All code must compile with zero errors — strict mode is on.
 
-## Vercel KV
+## Upstash Redis
 
-Game state is persisted in Vercel KV (Upstash Redis). The KV helper module lives at `src/lib/kv.ts`.
+Game state is persisted in Upstash Redis (via Vercel Marketplace). The client lives at `src/lib/kv.ts`.
 
-- All KV reads must use Zod schema validation (`.safeParse()`)
+- All reads must use Zod schema validation (`.safeParse()`)
 - Use key prefixes to namespace data (e.g. `game:`, `player:`)
-- Environment variables for KV are in `.env.local` (see `.env.local.example`)
+- Environment variables: `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` in `.env.local`
 
 ## CI/CD
 
