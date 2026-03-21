@@ -17,6 +17,7 @@ export interface GameRenderer {
   onFrame(callback: (dt: number) => void): void
   applyPanDeltaPixels(dx: number, dy: number): void
   applyZoomScale(factor: number): void
+  applyRotationDelta(deltaRadians: number): void
   resetCamera(): void
   canvas: HTMLCanvasElement
 }
@@ -48,13 +49,14 @@ export function createRenderer(canvas: HTMLCanvasElement): GameRenderer {
   // Offset from lookAt to camera position (kept constant during pan)
   const cameraOffset = BASE_POSITION.clone().sub(BASE_LOOKAT)
 
-  // Pan / zoom state (matches mi-casa-es-su-casa pattern)
+  // Pan / zoom / rotation state
   let zoomScale = 1
   const MIN_ZOOM = 0.5
   const MAX_ZOOM = 4
   let panWorldX = 0
   let panWorldY = 0
   const MAX_PAN = 20
+  let rotationY = 0 // radians around Y axis
 
   // Camera's right and up vectors in world space (for mapping screen pan to world)
   const cameraRight = new THREE.Vector3()
@@ -72,8 +74,11 @@ export function createRenderer(canvas: HTMLCanvasElement): GameRenderer {
     camera.top = frustum
     camera.bottom = -frustum
 
-    // Compute camera right/up vectors from the base orientation
-    camera.position.copy(BASE_POSITION)
+    // Rotate the camera offset around Y axis
+    const rotatedOffset = cameraOffset.clone().applyAxisAngle(_yAxis, rotationY)
+
+    // Place camera at rotated position to extract right/up vectors
+    camera.position.copy(BASE_LOOKAT).add(rotatedOffset)
     camera.lookAt(BASE_LOOKAT)
     camera.updateMatrixWorld()
     cameraRight.setFromMatrixColumn(camera.matrixWorld, 0)
@@ -85,10 +90,12 @@ export function createRenderer(canvas: HTMLCanvasElement): GameRenderer {
       .addScaledVector(cameraUp, panWorldY)
 
     const lookAt = BASE_LOOKAT.clone().add(panOffset)
-    camera.position.copy(lookAt).add(cameraOffset)
+    camera.position.copy(lookAt).add(rotatedOffset)
     camera.lookAt(lookAt)
     camera.updateProjectionMatrix()
   }
+
+  const _yAxis = new THREE.Vector3(0, 1, 0)
 
   camera.position.copy(BASE_POSITION)
   camera.lookAt(BASE_LOOKAT)
@@ -236,10 +243,16 @@ export function createRenderer(canvas: HTMLCanvasElement): GameRenderer {
       applyPanZoom()
     },
 
+    applyRotationDelta(deltaRadians: number) {
+      rotationY += deltaRadians
+      applyPanZoom()
+    },
+
     resetCamera() {
       zoomScale = 1
       panWorldX = 0
       panWorldY = 0
+      rotationY = 0
       applyPanZoom()
     },
 

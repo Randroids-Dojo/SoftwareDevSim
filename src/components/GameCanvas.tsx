@@ -21,6 +21,14 @@ function getTouchDistance(touches: TouchList): number {
   return dist2D(touches[0].clientX, touches[0].clientY, touches[1].clientX, touches[1].clientY)
 }
 
+/** Angle in radians of the line between two touches */
+function getTouchAngle(touches: TouchList): number {
+  return Math.atan2(
+    touches[1].clientY - touches[0].clientY,
+    touches[1].clientX - touches[0].clientX,
+  )
+}
+
 /** Pixel movement threshold before we start panning */
 const PAN_THRESHOLD = 8
 
@@ -40,19 +48,21 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
     lastX: number
     lastY: number
     lastDist: number
+    lastAngle: number
     startX: number
     startY: number
-  }>({ type: 'none', lastX: 0, lastY: 0, lastDist: 0, startX: 0, startY: 0 })
+  }>({ type: 'none', lastX: 0, lastY: 0, lastDist: 0, lastAngle: 0, startX: 0, startY: 0 })
 
   // Mouse drag state
   const mouseStateRef = useRef<{
     isDown: boolean
     isPanning: boolean
+    button: number // 0 = left (pan), 2 = right (rotate)
     lastX: number
     lastY: number
     startX: number
     startY: number
-  }>({ isDown: false, isPanning: false, lastX: 0, lastY: 0, startX: 0, startY: 0 })
+  }>({ isDown: false, isPanning: false, button: 0, lastX: 0, lastY: 0, startX: 0, startY: 0 })
 
   // Initialize game
   useEffect(() => {
@@ -103,6 +113,7 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
         state.lastX = (e.touches[0].clientX + e.touches[1].clientX) / 2
         state.lastY = (e.touches[0].clientY + e.touches[1].clientY) / 2
         state.lastDist = getTouchDistance(e.touches)
+        state.lastAngle = getTouchAngle(e.touches)
       }
     }
 
@@ -137,10 +148,17 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
         const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2
         const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2
         const dist = getTouchDistance(e.touches)
+        const angle = getTouchAngle(e.touches)
 
         // Zoom by scale factor relative to previous frame
         if (state.lastDist > 0) {
           game.applyZoomScale(dist / state.lastDist)
+        }
+
+        // Rotate by the angular change between fingers
+        const dAngle = angle - state.lastAngle
+        if (Math.abs(dAngle) < Math.PI) {
+          game.applyRotationDelta(-dAngle)
         }
 
         // Also pan by midpoint movement so the pinch center stays fixed
@@ -149,6 +167,7 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
         game.applyPanDeltaPixels(dx, dy)
 
         state.lastDist = dist
+        state.lastAngle = angle
         state.lastX = midX
         state.lastY = midY
       }
@@ -184,14 +203,21 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
     if (!container) return
 
     function onMouseDown(e: MouseEvent): void {
+      // Left button (0) = pan, right button (2) = rotate
+      if (e.button !== 0 && e.button !== 2) return
       mouseStateRef.current = {
         isDown: true,
         isPanning: false,
+        button: e.button,
         lastX: e.clientX,
         lastY: e.clientY,
         startX: e.clientX,
         startY: e.clientY,
       }
+    }
+
+    function onContextMenu(e: MouseEvent): void {
+      e.preventDefault()
     }
 
     function onMouseMove(e: MouseEvent): void {
@@ -200,12 +226,12 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
       const game = gameRef.current
       if (!game) return
 
-      // Check threshold before entering pan mode
+      // Check threshold before entering drag mode
       if (!state.isPanning) {
         if (dist2D(e.clientX, e.clientY, state.startX, state.startY) > PAN_THRESHOLD) {
           state.isPanning = true
-          if (container) container.style.cursor = 'grabbing'
-          // Snap to current position so the first pan delta isn't huge
+          if (container) container.style.cursor = state.button === 2 ? 'ew-resize' : 'grabbing'
+          // Snap to current position so the first delta isn't huge
           state.lastX = e.clientX
           state.lastY = e.clientY
         }
@@ -214,7 +240,16 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
 
       const dx = e.clientX - state.lastX
       const dy = e.clientY - state.lastY
-      game.applyPanDeltaPixels(dx, dy)
+
+      if (state.button === 2) {
+        // Right-click drag: rotate (horizontal movement maps to Y-axis rotation)
+        const ROTATE_SPEED = 0.005
+        game.applyRotationDelta(dx * ROTATE_SPEED)
+      } else {
+        // Left-click drag: pan
+        game.applyPanDeltaPixels(dx, dy)
+      }
+
       state.lastX = e.clientX
       state.lastY = e.clientY
     }
@@ -235,12 +270,14 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
     }
 
     container.addEventListener('mousedown', onMouseDown)
+    container.addEventListener('contextmenu', onContextMenu)
     window.addEventListener('mousemove', onMouseMove)
     window.addEventListener('mouseup', onMouseUp)
     container.addEventListener('wheel', onWheel, { passive: false })
 
     return () => {
       container.removeEventListener('mousedown', onMouseDown)
+      container.removeEventListener('contextmenu', onContextMenu)
       window.removeEventListener('mousemove', onMouseMove)
       window.removeEventListener('mouseup', onMouseUp)
       container.removeEventListener('wheel', onWheel)

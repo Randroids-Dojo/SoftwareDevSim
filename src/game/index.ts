@@ -301,6 +301,10 @@ export function createGame(canvas: HTMLCanvasElement, existingState?: GameState)
       gameRenderer.applyZoomScale(factor)
     },
 
+    applyRotationDelta(deltaRadians: number) {
+      gameRenderer.applyRotationDelta(deltaRadians)
+    },
+
     resetCamera() {
       gameRenderer.resetCamera()
     },
