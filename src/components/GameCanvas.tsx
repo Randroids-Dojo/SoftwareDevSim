@@ -31,6 +31,8 @@ function getTouchAngle(touches: TouchList): number {
 
 /** Pixel movement threshold before we start panning */
 const PAN_THRESHOLD = 8
+/** Radians per pixel of horizontal mouse drag for rotation */
+const ROTATE_SPEED = 0.005
 
 export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -242,8 +244,7 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
       const dy = e.clientY - state.lastY
 
       if (state.button === 2) {
-        // Right-click drag: rotate (horizontal movement maps to Y-axis rotation)
-        const ROTATE_SPEED = 0.005
+        // Right-click drag: rotate
         game.applyRotationDelta(dx * ROTATE_SPEED)
       } else {
         // Left-click drag: pan

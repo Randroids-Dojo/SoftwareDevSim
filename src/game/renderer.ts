@@ -61,6 +61,11 @@ export function createRenderer(canvas: HTMLCanvasElement): GameRenderer {
   // Camera's right and up vectors in world space (for mapping screen pan to world)
   const cameraRight = new THREE.Vector3()
   const cameraUp = new THREE.Vector3()
+  const _yAxis = new THREE.Vector3(0, 1, 0)
+  // Reusable temp vectors to avoid per-frame allocations
+  const _rotatedOffset = new THREE.Vector3()
+  const _panOffset = new THREE.Vector3()
+  const _lookAt = new THREE.Vector3()
 
   function applyPanZoom(): void {
     const w = canvas.clientWidth
@@ -75,27 +80,26 @@ export function createRenderer(canvas: HTMLCanvasElement): GameRenderer {
     camera.bottom = -frustum
 
     // Rotate the camera offset around Y axis
-    const rotatedOffset = cameraOffset.clone().applyAxisAngle(_yAxis, rotationY)
+    _rotatedOffset.copy(cameraOffset).applyAxisAngle(_yAxis, rotationY)
 
     // Place camera at rotated position to extract right/up vectors
-    camera.position.copy(BASE_LOOKAT).add(rotatedOffset)
+    camera.position.copy(BASE_LOOKAT).add(_rotatedOffset)
     camera.lookAt(BASE_LOOKAT)
     camera.updateMatrixWorld()
     cameraRight.setFromMatrixColumn(camera.matrixWorld, 0)
     cameraUp.setFromMatrixColumn(camera.matrixWorld, 1)
 
     // Apply pan offset in camera-local space
-    const panOffset = new THREE.Vector3()
+    _panOffset
+      .set(0, 0, 0)
       .addScaledVector(cameraRight, panWorldX)
       .addScaledVector(cameraUp, panWorldY)
 
-    const lookAt = BASE_LOOKAT.clone().add(panOffset)
-    camera.position.copy(lookAt).add(rotatedOffset)
-    camera.lookAt(lookAt)
+    _lookAt.copy(BASE_LOOKAT).add(_panOffset)
+    camera.position.copy(_lookAt).add(_rotatedOffset)
+    camera.lookAt(_lookAt)
     camera.updateProjectionMatrix()
   }
-
-  const _yAxis = new THREE.Vector3(0, 1, 0)
 
   camera.position.copy(BASE_POSITION)
   camera.lookAt(BASE_LOOKAT)
