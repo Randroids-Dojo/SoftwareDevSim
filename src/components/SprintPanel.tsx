@@ -107,8 +107,8 @@ function PanelWrapper({
     <div className="absolute bottom-14 left-1/2 -translate-x-1/2 w-[480px] max-w-[90vw] bg-gray-800 border border-gray-600 rounded-t-lg shadow-xl z-20">
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700">
         <h3 className="text-white font-medium">{title}</h3>
-        <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label="Close">
-          &times;
+        <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label="Collapse">
+          &#9662;
         </button>
       </div>
       <div className="p-4">{children}</div>
