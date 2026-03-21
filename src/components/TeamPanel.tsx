@@ -20,10 +20,18 @@ function barColor(v: number): string {
 }
 
 export default function TeamPanel({ snapshot, game, onClose }: TeamPanelProps) {
-  const assignableStories = snapshot.backlog.filter(
-    (s) =>
-      snapshot.sprint.stories.includes(s.id) && (s.status === 'todo' || s.status === 'in_progress'),
-  )
+  const assignableStories = (devId: string) =>
+    snapshot.backlog.filter((s) => {
+      if (!snapshot.sprint.stories.includes(s.id)) return false
+      if (s.status !== 'todo' && s.status !== 'in_progress') return false
+
+      const assignedDevs = snapshot.developers.filter((d) => d.assignedStoryId === s.id)
+      // Already assigned to this dev
+      if (assignedDevs.some((d) => d.id === devId)) return false
+      // With pair programming, allow a second dev; without, only unassigned stories
+      if (snapshot.practices.pairProgramming) return assignedDevs.length < 2
+      return assignedDevs.length === 0
+    })
 
   return (
     <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-[520px] max-w-[90vw] bg-gray-800 border border-gray-600 rounded-t-lg shadow-xl z-20">
@@ -73,6 +81,14 @@ export default function TeamPanel({ snapshot, game, onClose }: TeamPanelProps) {
                     <span className="text-xs text-gray-500">
                       ({Math.round(assignedStory.progress * 100)}%)
                     </span>
+                    {(() => {
+                      const partner = snapshot.developers.find(
+                        (d) => d.id !== dev.id && d.assignedStoryId === assignedStory.id,
+                      )
+                      return partner ? (
+                        <span className="text-xs text-purple-400">Pairing w/ {partner.name}</span>
+                      ) : null
+                    })()}
                     <button
                       onClick={() => game.unassignStory(dev.id)}
                       className="text-xs text-red-400 hover:text-red-300 ml-auto"
@@ -89,11 +105,19 @@ export default function TeamPanel({ snapshot, game, onClose }: TeamPanelProps) {
                     }}
                   >
                     <option value="">-- Assign story --</option>
-                    {assignableStories.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.title} ({s.points}pts)
-                      </option>
-                    ))}
+                    {assignableStories(dev.id).map((s) => {
+                      const assignedDev = snapshot.developers.find(
+                        (d) => d.assignedStoryId === s.id,
+                      )
+                      const label = assignedDev
+                        ? `${s.title} (${s.points}pts) — pair w/ ${assignedDev.name}`
+                        : `${s.title} (${s.points}pts)`
+                      return (
+                        <option key={s.id} value={s.id}>
+                          {label}
+                        </option>
+                      )
+                    })}
                   </select>
                 )}
               </div>

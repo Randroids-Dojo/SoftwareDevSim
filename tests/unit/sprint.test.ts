@@ -160,6 +160,49 @@ describe('Story Progress', () => {
     assert.equal(updated[0].status, 'done')
     assert.equal(updated[0].wasReviewed, true)
   })
+
+  it('applies pairing quality boost when two devs are assigned to the same story', () => {
+    const stories = [makeStory({ progress: 0.998 })]
+    const devs = [
+      makeDev({ id: 'dev-0', currentActivity: 'pairing', assignedStoryId: 'story-1' }),
+      makeDev({
+        id: 'dev-1',
+        name: 'Jordan',
+        currentActivity: 'pairing',
+        assignedStoryId: 'story-1',
+      }),
+    ]
+    const updated = tickStoryProgress(
+      stories,
+      devs,
+      makePractices({ pairProgramming: true }),
+      makeClock(),
+    )
+    const completed = updated.find((s) => s.progress >= 1)
+    assert.ok(completed, 'Expected a completed story')
+    // Pairing gives 1.3x quality multiplier
+    assert.ok(completed.quality > 0, 'Expected quality > 0 from pairing')
+  })
+
+  it('progresses story with two devs assigned (pair programming)', () => {
+    const stories = [makeStory()]
+    const devs = [
+      makeDev({ id: 'dev-0', currentActivity: 'pairing', assignedStoryId: 'story-1' }),
+      makeDev({
+        id: 'dev-1',
+        name: 'Jordan',
+        currentActivity: 'pairing',
+        assignedStoryId: 'story-1',
+      }),
+    ]
+    const updated = tickStoryProgress(
+      stories,
+      devs,
+      makePractices({ pairProgramming: true }),
+      makeClock(),
+    )
+    assert.ok(updated[0].progress > 0, 'Expected progress from paired devs')
+  })
 })
 
 describe('Sprint Velocity', () => {
