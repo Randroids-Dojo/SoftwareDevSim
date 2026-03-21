@@ -56,7 +56,7 @@ export default function MenuBar({ snapshot, game, activePanel, setActivePanel }:
 
   return (
     <div className="absolute bottom-0 left-0 right-0 z-10">
-      <div className="flex items-end justify-center gap-1 px-4 pb-6" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
+      <div className="flex items-end justify-center gap-1 px-4 pb-2" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0.5rem))' }}>
         <MenuButton
           label="Sprint"
           active={activePanel === 'sprint'}
