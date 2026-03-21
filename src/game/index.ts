@@ -283,6 +283,15 @@ export function createGame(canvas: HTMLCanvasElement, existingState?: GameState)
     setSpeed(speed: number) {
       state.clock.speed = speed
     },
+
+    fastForward(ticks: number) {
+      const wasPaused = state.clock.paused
+      state.clock.paused = false
+      for (let i = 0; i < ticks; i++) {
+        gameTick()
+      }
+      state.clock.paused = wasPaused
+    },
   }
 
   return instance

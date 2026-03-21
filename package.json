@@ -13,7 +13,9 @@
     "type-check": "tsc --noEmit",
     "test:unit": "npx tsx --test tests/unit/*.test.ts",
     "test:coverage": "npx tsx --test --experimental-test-coverage --test-coverage-include='src/game/**' --test-coverage-include='src/lib/**' --test-coverage-lines=90 --test-coverage-branches=80 --test-coverage-functions=90 tests/unit/*.test.ts",
-    "test:smoke": "npx tsx tests/smoke/smoke.test.ts"
+    "test:smoke": "npx tsx tests/smoke/smoke.test.ts",
+    "test:e2e": "npx playwright test",
+    "test:e2e:headed": "npx playwright test --headed"
   },
   "dependencies": {
     "@upstash/redis": "^1.37.0",
@@ -24,6 +26,7 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

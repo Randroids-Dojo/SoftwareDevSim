@@ -61,4 +61,6 @@ export interface GameInstance {
   togglePractice(key: keyof Practices): void
   setPaused(paused: boolean): void
   setSpeed(speed: number): void
+  /** Run N game ticks synchronously (for E2E testing). */
+  fastForward(ticks: number): void
 }

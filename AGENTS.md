@@ -90,6 +90,24 @@ npx wait-on http://localhost:3000
 npm run test:smoke
 ```
 
+## E2E Tests (Playwright)
+
+Playwright tests live in `tests/e2e/`. They launch a real browser and exercise the full game UI.
+
+```bash
+npm run test:e2e           # Headless (CI)
+npm run test:e2e:headed    # Headed (watch the tests play the game)
+npx playwright test --ui   # Interactive UI mode for debugging
+```
+
+Tests cover: intro/start flow, sprint planning, team management, speed controls, practices panel, ship release, and panel toggling. The game instance is exposed on `window.__game` for E2E tests to call `fastForward()` or manipulate state directly.
+
+### Rules for agents
+
+- Always run `npm run test:e2e` after changes to UI components or game logic
+- If a test fails, fix the code — do not weaken the assertion
+- For tests that need game state advancement, use `page.evaluate` to call `window.__game.fastForward(ticks)` or manipulate state directly. Do NOT wait for real-time simulation (rAF is too slow).
+
 ## Formatting, Linting & TypeScript
 
 After code changes, always run (in order):
@@ -124,6 +142,7 @@ Game state is persisted in Upstash Redis (via Vercel Marketplace). The client li
 
 - **CI** (`ci.yml`): Runs format:check + lint + type-check + test:coverage on PRs and pushes to main
 - **Smoke** (`smoke.yml`): Builds and runs smoke tests on PRs and pushes to main
+- **E2E** (`e2e.yml`): Runs Playwright E2E tests (chromium) on PRs and pushes to main
 - **Deploy**: Vercel Git integration auto-deploys on push to main and creates preview deploys for PRs (no GitHub Actions workflow needed)
 
 ## Game Design

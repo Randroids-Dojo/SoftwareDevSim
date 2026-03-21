@@ -30,6 +30,11 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
       gameRef.current = game
       game.start()
       onGameReadyRef.current(game)
+
+      // Expose game instance for E2E testing
+      if (typeof window !== 'undefined') {
+        ;(window as unknown as Record<string, unknown>).__game = game
+      }
     })
 
     return () => {
