@@ -10,6 +10,7 @@ import PracticesPanel from '../components/PracticesPanel'
 import BacklogPanel from '../components/BacklogPanel'
 import ShipPanel from '../components/ShipPanel'
 import KanbanOverlay from '../components/KanbanOverlay'
+import FeedbackFab from '../components/FeedbackFab'
 import { useGameState } from '../hooks/useGameState'
 import { useGamePersistence } from '../hooks/useGamePersistence'
 import { loadGameState, resetGameId } from '../lib/persistence'
@@ -82,6 +83,9 @@ export default function Home() {
             activePanel={activePanel}
             setActivePanel={setActivePanel}
           />
+
+          {/* Feedback FAB — only visible when paused */}
+          {snapshot.clock.paused && <FeedbackFab />}
 
           {activePanel === 'sprint' && (
             <SprintPanel snapshot={snapshot} game={game} onClose={() => setActivePanel(null)} />
