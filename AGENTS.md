@@ -177,6 +177,7 @@ Leave every file you touch cleaner than you found it. When editing a file, fix n
 
 ## Commits
 
+- **Before every commit**, do two rounds of review and cleanup on all changed files. Round 1: scan for bugs, dead code, missing guards, and declaration ordering issues. Round 2: look for per-frame allocations, unhoist constants, stale comments, and anything the first round missed. Fix everything you find before committing.
 - One logical unit of work per commit
 - Do not push unless explicitly instructed
 - Do not include AI attribution in commit messages
