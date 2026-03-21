@@ -15,6 +15,14 @@ export interface GameRenderer {
   setBuildLight(status: CIStatus): void
   setScreenGlow(active: boolean): void
   onFrame(callback: (dt: number) => void): void
+  applyPanDeltaPixels(dx: number, dy: number): void
+  applyZoomScale(factor: number): void
+  resetCamera(): void
+  canvas: HTMLCanvasElement
+}
+
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v))
 }
 
 export function createRenderer(canvas: HTMLCanvasElement): GameRenderer {
@@ -23,18 +31,67 @@ export function createRenderer(canvas: HTMLCanvasElement): GameRenderer {
 
   // Orthographic camera
   const aspect = canvas.clientHeight > 0 ? canvas.clientWidth / canvas.clientHeight : 16 / 9
-  const frustum = 14
+  const BASE_FRUSTUM = 14
+
   const camera = new THREE.OrthographicCamera(
-    -frustum * aspect,
-    frustum * aspect,
-    frustum,
-    -frustum,
+    -BASE_FRUSTUM * aspect,
+    BASE_FRUSTUM * aspect,
+    BASE_FRUSTUM,
+    -BASE_FRUSTUM,
     0.1,
     100,
   )
-  // Isometric-ish view
-  camera.position.set(20, 18, -8)
-  camera.lookAt(12, 0, 8)
+
+  // Isometric-ish view — base position & lookAt target
+  const BASE_POSITION = new THREE.Vector3(20, 18, -8)
+  const BASE_LOOKAT = new THREE.Vector3(12, 0, 8)
+  // Offset from lookAt to camera position (kept constant during pan)
+  const cameraOffset = BASE_POSITION.clone().sub(BASE_LOOKAT)
+
+  // Pan / zoom state (matches mi-casa-es-su-casa pattern)
+  let zoomScale = 1
+  const MIN_ZOOM = 0.5
+  const MAX_ZOOM = 4
+  let panWorldX = 0
+  let panWorldY = 0
+  const MAX_PAN = 20
+
+  // Camera's right and up vectors in world space (for mapping screen pan to world)
+  const cameraRight = new THREE.Vector3()
+  const cameraUp = new THREE.Vector3()
+
+  function applyPanZoom(): void {
+    const w = canvas.clientWidth
+    const h = canvas.clientHeight
+    if (w === 0 || h === 0) return
+    const a = w / h
+    const frustum = BASE_FRUSTUM / zoomScale
+
+    camera.left = -frustum * a
+    camera.right = frustum * a
+    camera.top = frustum
+    camera.bottom = -frustum
+
+    // Compute camera right/up vectors from the base orientation
+    camera.position.copy(BASE_POSITION)
+    camera.lookAt(BASE_LOOKAT)
+    camera.updateMatrixWorld()
+    cameraRight.setFromMatrixColumn(camera.matrixWorld, 0)
+    cameraUp.setFromMatrixColumn(camera.matrixWorld, 1)
+
+    // Apply pan offset in camera-local space
+    const panOffset = new THREE.Vector3()
+      .addScaledVector(cameraRight, panWorldX)
+      .addScaledVector(cameraUp, panWorldY)
+
+    const lookAt = BASE_LOOKAT.clone().add(panOffset)
+    camera.position.copy(lookAt).add(cameraOffset)
+    camera.lookAt(lookAt)
+    camera.updateProjectionMatrix()
+  }
+
+  camera.position.copy(BASE_POSITION)
+  camera.lookAt(BASE_LOOKAT)
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
   renderer.setSize(canvas.clientWidth, canvas.clientHeight)
@@ -87,13 +144,8 @@ export function createRenderer(canvas: HTMLCanvasElement): GameRenderer {
     const w = canvas.clientWidth
     const h = canvas.clientHeight
     if (w === 0 || h === 0) return
-    const a = w / h
-    camera.left = -frustum * a
-    camera.right = frustum * a
-    camera.top = frustum
-    camera.bottom = -frustum
-    camera.updateProjectionMatrix()
     renderer.setSize(w, h)
+    applyPanZoom()
   }
   window.addEventListener('resize', onResize)
 
@@ -164,5 +216,33 @@ export function createRenderer(canvas: HTMLCanvasElement): GameRenderer {
     onFrame(callback: (dt: number) => void) {
       frameCallback = callback
     },
+
+    applyPanDeltaPixels(dx: number, dy: number) {
+      const frustum = BASE_FRUSTUM / zoomScale
+      const a = canvas.clientHeight > 0 ? canvas.clientWidth / canvas.clientHeight : 16 / 9
+      const visibleW = frustum * a * 2
+      const visibleH = frustum * 2
+      const unitsPerPixelX = visibleW / canvas.clientWidth
+      const unitsPerPixelY = visibleH / canvas.clientHeight
+      panWorldX -= dx * unitsPerPixelX
+      panWorldY += dy * unitsPerPixelY
+      panWorldX = clamp(panWorldX, -MAX_PAN, MAX_PAN)
+      panWorldY = clamp(panWorldY, -MAX_PAN, MAX_PAN)
+      applyPanZoom()
+    },
+
+    applyZoomScale(factor: number) {
+      zoomScale = clamp(zoomScale * factor, MIN_ZOOM, MAX_ZOOM)
+      applyPanZoom()
+    },
+
+    resetCamera() {
+      zoomScale = 1
+      panWorldX = 0
+      panWorldY = 0
+      applyPanZoom()
+    },
+
+    canvas,
   }
 }

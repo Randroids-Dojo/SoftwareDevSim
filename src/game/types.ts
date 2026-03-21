@@ -63,4 +63,10 @@ export interface GameInstance {
   setSpeed(speed: number): void
   /** Run N game ticks synchronously (for E2E testing). */
   fastForward(ticks: number): void
+  /** Pan the camera by pixel deltas (content follows pointer). */
+  applyPanDeltaPixels(dx: number, dy: number): void
+  /** Zoom the camera by a scale factor (>1 = zoom in, <1 = zoom out). */
+  applyZoomScale(factor: number): void
+  /** Reset camera to default position and zoom. */
+  resetCamera(): void
 }

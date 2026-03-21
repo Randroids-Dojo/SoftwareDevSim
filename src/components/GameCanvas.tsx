@@ -9,7 +9,23 @@ interface GameCanvasProps {
   onGameReady: (game: GameActions) => void
 }
 
+/** Pixel distance between two 2D points */
+function dist2D(x1: number, y1: number, x2: number, y2: number): number {
+  const dx = x1 - x2
+  const dy = y1 - y2
+  return Math.sqrt(dx * dx + dy * dy)
+}
+
+/** Distance between two touches */
+function getTouchDistance(touches: TouchList): number {
+  return dist2D(touches[0].clientX, touches[0].clientY, touches[1].clientX, touches[1].clientY)
+}
+
+/** Pixel movement threshold before we start panning */
+const PAN_THRESHOLD = 8
+
 export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const gameRef = useRef<GameActions | null>(null)
   const onGameReadyRef = useRef(onGameReady)
@@ -18,6 +34,27 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
   // Capture savedState at mount time so effect doesn't re-run
   const savedStateRef = useRef(savedState)
 
+  // Touch gesture state (not React state — avoids re-renders)
+  const touchStateRef = useRef<{
+    type: 'none' | 'pan' | 'pinch'
+    lastX: number
+    lastY: number
+    lastDist: number
+    startX: number
+    startY: number
+  }>({ type: 'none', lastX: 0, lastY: 0, lastDist: 0, startX: 0, startY: 0 })
+
+  // Mouse drag state
+  const mouseStateRef = useRef<{
+    isDown: boolean
+    isPanning: boolean
+    lastX: number
+    lastY: number
+    startX: number
+    startY: number
+  }>({ isDown: false, isPanning: false, lastX: 0, lastY: 0, startX: 0, startY: 0 })
+
+  // Initialize game
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas || gameRef.current) return
@@ -44,11 +81,189 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
     }
   }, [])
 
+  // Native touch event listeners (non-passive so we can preventDefault)
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    function onTouchStart(e: TouchEvent): void {
+      e.preventDefault()
+      const state = touchStateRef.current
+
+      if (e.touches.length === 1) {
+        const x = e.touches[0].clientX
+        const y = e.touches[0].clientY
+        state.type = 'none'
+        state.lastX = x
+        state.lastY = y
+        state.startX = x
+        state.startY = y
+      } else if (e.touches.length === 2) {
+        state.type = 'pinch'
+        state.lastX = (e.touches[0].clientX + e.touches[1].clientX) / 2
+        state.lastY = (e.touches[0].clientY + e.touches[1].clientY) / 2
+        state.lastDist = getTouchDistance(e.touches)
+      }
+    }
+
+    function onTouchMove(e: TouchEvent): void {
+      e.preventDefault()
+      const game = gameRef.current
+      if (!game) return
+      const state = touchStateRef.current
+
+      if (e.touches.length === 1) {
+        const x = e.touches[0].clientX
+        const y = e.touches[0].clientY
+
+        // Check threshold before entering pan mode
+        if (state.type === 'none') {
+          if (dist2D(x, y, state.startX, state.startY) > PAN_THRESHOLD) {
+            state.type = 'pan'
+            state.lastX = x
+            state.lastY = y
+          }
+          return
+        }
+
+        if (state.type === 'pan') {
+          const dx = x - state.lastX
+          const dy = y - state.lastY
+          game.applyPanDeltaPixels(dx, dy)
+          state.lastX = x
+          state.lastY = y
+        }
+      } else if (state.type === 'pinch' && e.touches.length === 2) {
+        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2
+        const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2
+        const dist = getTouchDistance(e.touches)
+
+        // Zoom by scale factor relative to previous frame
+        if (state.lastDist > 0) {
+          game.applyZoomScale(dist / state.lastDist)
+        }
+
+        // Also pan by midpoint movement so the pinch center stays fixed
+        const dx = midX - state.lastX
+        const dy = midY - state.lastY
+        game.applyPanDeltaPixels(dx, dy)
+
+        state.lastDist = dist
+        state.lastX = midX
+        state.lastY = midY
+      }
+    }
+
+    function onTouchEnd(e: TouchEvent): void {
+      e.preventDefault()
+      const state = touchStateRef.current
+      if (e.touches.length === 1) {
+        // Transition from pinch back to single-finger pan
+        state.type = 'pan'
+        state.lastX = e.touches[0].clientX
+        state.lastY = e.touches[0].clientY
+      } else if (e.touches.length === 0) {
+        state.type = 'none'
+      }
+    }
+
+    container.addEventListener('touchstart', onTouchStart, { passive: false })
+    container.addEventListener('touchmove', onTouchMove, { passive: false })
+    container.addEventListener('touchend', onTouchEnd, { passive: false })
+
+    return () => {
+      container.removeEventListener('touchstart', onTouchStart)
+      container.removeEventListener('touchmove', onTouchMove)
+      container.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [])
+
+  // Mouse drag and wheel — desktop pan/zoom
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    function onMouseDown(e: MouseEvent): void {
+      mouseStateRef.current = {
+        isDown: true,
+        isPanning: false,
+        lastX: e.clientX,
+        lastY: e.clientY,
+        startX: e.clientX,
+        startY: e.clientY,
+      }
+    }
+
+    function onMouseMove(e: MouseEvent): void {
+      const state = mouseStateRef.current
+      if (!state.isDown) return
+      const game = gameRef.current
+      if (!game) return
+
+      // Check threshold before entering pan mode
+      if (!state.isPanning) {
+        if (dist2D(e.clientX, e.clientY, state.startX, state.startY) > PAN_THRESHOLD) {
+          state.isPanning = true
+          container!.style.cursor = 'grabbing'
+          // Snap to current position so the first pan delta isn't huge
+          state.lastX = e.clientX
+          state.lastY = e.clientY
+        }
+        return
+      }
+
+      const dx = e.clientX - state.lastX
+      const dy = e.clientY - state.lastY
+      game.applyPanDeltaPixels(dx, dy)
+      state.lastX = e.clientX
+      state.lastY = e.clientY
+    }
+
+    function onMouseUp(): void {
+      mouseStateRef.current.isDown = false
+      mouseStateRef.current.isPanning = false
+      container!.style.cursor = 'grab'
+    }
+
+    function onWheel(e: WheelEvent): void {
+      e.preventDefault()
+      const game = gameRef.current
+      if (!game) return
+      // Scroll up (deltaY < 0) → zoom in; scroll down → zoom out
+      const factor = Math.pow(0.999, e.deltaY)
+      game.applyZoomScale(factor)
+    }
+
+    container.addEventListener('mousedown', onMouseDown)
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
+    container.addEventListener('wheel', onWheel, { passive: false })
+
+    return () => {
+      container.removeEventListener('mousedown', onMouseDown)
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+      container.removeEventListener('wheel', onWheel)
+    }
+  }, [])
+
   return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full"
-      style={{ display: 'block' }}
-    />
+    <div
+      ref={containerRef}
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        touchAction: 'none',
+        cursor: 'grab',
+        overflow: 'hidden',
+      }}
+    >
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full"
+        style={{ display: 'block' }}
+      />
+    </div>
   )
 }
