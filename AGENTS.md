@@ -155,6 +155,18 @@ The Game Design Document lives at `Docs/GDD.md`.
 - After completing a feature, update the milestones table in GDD.md to reflect current status.
 - If a design decision changes during implementation, update the GDD to match.
 
+## Pre-Push Checklist
+
+Before pushing any branch, **always** run the full verification sequence and fix all errors:
+
+```bash
+npm run format
+npm run lint:fix
+npm run build
+```
+
+`npm run build` runs the production Next.js build, which includes TypeScript compilation **and** ESLint. A Vercel deploy will fail on any error this catches, so never push without a clean build.
+
 ## Commits
 
 - One logical unit of work per commit
