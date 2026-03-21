@@ -160,7 +160,7 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
         // Rotate by the angular change between fingers
         const dAngle = angle - state.lastAngle
         if (Math.abs(dAngle) < Math.PI) {
-          game.applyRotationDelta(-dAngle)
+          game.applyRotationDelta(dAngle)
         }
 
         // Also pan by midpoint movement so the pinch center stays fixed
