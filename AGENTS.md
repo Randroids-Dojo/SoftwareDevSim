@@ -62,6 +62,7 @@ dot find "query"     # Search dots
 - Use dependencies (`-a`) to enforce ordering between dots
 - **Before starting implementation:** Create or verify dots exist for the work. Never code without a tracked task.
 - **Use `dot on <id>` before writing code** for a task, and `dot off <id>` when done
+- **Always commit the entire `.dots/` directory**, including `archive/`. Archived dots are part of the project history.
 
 ## Unit Tests & Coverage
 
