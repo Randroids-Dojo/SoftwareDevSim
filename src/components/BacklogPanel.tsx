@@ -37,7 +37,7 @@ export default function BacklogPanel({ snapshot, onClose }: BacklogPanelProps) {
   const order: StoryStatus[] = ['in_progress', 'review', 'todo', 'backlog', 'done']
 
   return (
-    <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-[520px] max-w-[90vw] bg-gray-800 border border-gray-600 rounded-t-lg shadow-xl z-20">
+    <div className="absolute bottom-18 left-1/2 -translate-x-1/2 w-[520px] max-w-[90vw] bg-gray-800 border border-gray-600 rounded-t-lg shadow-xl z-20">
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700">
         <h3 className="text-white font-medium">Backlog</h3>
         <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label="Close">
