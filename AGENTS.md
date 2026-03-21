@@ -171,6 +171,10 @@ npm run build
 
 If you encounter a broken or misconfigured tool, flaky script, stale dependency, or any other pre-existing issue **while working on a task**, fix it right then — do not skip it, work around it, or label it "pre-existing." Broken infrastructure left unfixed causes compounding failures. Treat every red signal as your responsibility, regardless of who introduced it.
 
+## Boy Scout Rule
+
+Leave every file you touch cleaner than you found it. When editing a file, fix nearby issues you notice: dead imports, unclear names, stale comments, inconsistent formatting, missing type annotations on the lines you're already changing. Do not make sweeping unrelated refactors — keep improvements scoped to the files and functions you are already working in.
+
 ## Commits
 
 - One logical unit of work per commit
