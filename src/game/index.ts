@@ -200,7 +200,7 @@ export function createGame(canvas: HTMLCanvasElement, existingState?: GameState)
         // Allow two devs on one story when pair programming is enabled
         const maxDevs = state.practices.pairProgramming ? 2 : 1
         if (othersOnStory.length >= maxDevs) {
-          // Evict the earliest-assigned dev to make room
+          // Evict existing devs to make room
           for (const d of othersOnStory) {
             d.assignedStoryId = null
             const inst = developers.find((di) => di.state.id === d.id)

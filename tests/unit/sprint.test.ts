@@ -161,9 +161,22 @@ describe('Story Progress', () => {
     assert.equal(updated[0].wasReviewed, true)
   })
 
-  it('applies pairing quality boost when two devs are assigned to the same story', () => {
+  it('applies pairing quality boost when dev activity is pairing', () => {
     const stories = [makeStory({ progress: 0.998 })]
-    const devs = [
+    // Use a solo working dev as baseline
+    const soloDevs = [makeDev({ currentActivity: 'working' })]
+    const soloResult = tickStoryProgress(
+      stories,
+      soloDevs,
+      makePractices({ tdd: true }),
+      makeClock(),
+    )
+    const soloCompleted = soloResult.find((s) => s.progress >= 1)
+    assert.ok(soloCompleted, 'Expected solo story to complete')
+
+    // Now test with pairing — the 1.3x multiplier feeds into computeStoryQuality
+    const pairStories = [makeStory({ progress: 0.998 })]
+    const pairDevs = [
       makeDev({ id: 'dev-0', currentActivity: 'pairing', assignedStoryId: 'story-1' }),
       makeDev({
         id: 'dev-1',
@@ -172,16 +185,18 @@ describe('Story Progress', () => {
         assignedStoryId: 'story-1',
       }),
     ]
-    const updated = tickStoryProgress(
-      stories,
-      devs,
-      makePractices({ pairProgramming: true }),
+    const pairResult = tickStoryProgress(
+      pairStories,
+      pairDevs,
+      makePractices({ pairProgramming: true, tdd: true }),
       makeClock(),
     )
-    const completed = updated.find((s) => s.progress >= 1)
-    assert.ok(completed, 'Expected a completed story')
-    // Pairing gives 1.3x quality multiplier
-    assert.ok(completed.quality > 0, 'Expected quality > 0 from pairing')
+    const pairCompleted = pairResult.find((s) => s.progress >= 1)
+    assert.ok(pairCompleted, 'Expected paired story to complete')
+    assert.ok(
+      pairCompleted.quality >= soloCompleted.quality,
+      `Pairing quality (${pairCompleted.quality}) should be >= solo quality (${soloCompleted.quality})`,
+    )
   })
 
   it('progresses story with two devs assigned (pair programming)', () => {

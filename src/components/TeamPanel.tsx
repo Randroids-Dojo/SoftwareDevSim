@@ -46,6 +46,11 @@ export default function TeamPanel({ snapshot, game, onClose }: TeamPanelProps) {
           const assignedStory = dev.assignedStoryId
             ? snapshot.backlog.find((s) => s.id === dev.assignedStoryId)
             : null
+          const pairPartner = assignedStory
+            ? snapshot.developers.find(
+                (d) => d.id !== dev.id && d.assignedStoryId === assignedStory.id,
+              )
+            : undefined
 
           return (
             <div key={dev.id} className="bg-gray-700/50 rounded p-3">
@@ -81,14 +86,9 @@ export default function TeamPanel({ snapshot, game, onClose }: TeamPanelProps) {
                     <span className="text-xs text-gray-500">
                       ({Math.round(assignedStory.progress * 100)}%)
                     </span>
-                    {(() => {
-                      const partner = snapshot.developers.find(
-                        (d) => d.id !== dev.id && d.assignedStoryId === assignedStory.id,
-                      )
-                      return partner ? (
-                        <span className="text-xs text-purple-400">Pairing w/ {partner.name}</span>
-                      ) : null
-                    })()}
+                    {pairPartner && (
+                      <span className="text-xs text-purple-400">Pairing w/ {pairPartner.name}</span>
+                    )}
                     <button
                       onClick={() => game.unassignStory(dev.id)}
                       className="text-xs text-red-400 hover:text-red-300 ml-auto"
