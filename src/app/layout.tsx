@@ -1,10 +1,16 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import UpdateBanner from '../components/UpdateBanner'
 
 export const metadata: Metadata = {
   title: 'SoftwareDevSim',
   description: 'A collaboratively agentic coded game about software development',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
