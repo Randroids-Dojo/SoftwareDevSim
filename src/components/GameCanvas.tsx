@@ -204,7 +204,7 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
       if (!state.isPanning) {
         if (dist2D(e.clientX, e.clientY, state.startX, state.startY) > PAN_THRESHOLD) {
           state.isPanning = true
-          container!.style.cursor = 'grabbing'
+          if (container) container.style.cursor = 'grabbing'
           // Snap to current position so the first pan delta isn't huge
           state.lastX = e.clientX
           state.lastY = e.clientY
@@ -222,7 +222,7 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
     function onMouseUp(): void {
       mouseStateRef.current.isDown = false
       mouseStateRef.current.isPanning = false
-      container!.style.cursor = 'grab'
+      if (container) container.style.cursor = 'grab'
     }
 
     function onWheel(e: WheelEvent): void {
