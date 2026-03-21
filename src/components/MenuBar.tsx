@@ -18,12 +18,14 @@ function MenuButton({
   onClick,
   disabled,
   badge,
+  pulse,
 }: {
   label: string
   active: boolean
   onClick: () => void
   disabled?: boolean
   badge?: string
+  pulse?: boolean
 }) {
   return (
     <button
@@ -32,7 +34,9 @@ function MenuButton({
       className={`relative px-4 py-2 text-sm font-medium rounded-t transition-colors ${
         active
           ? 'bg-gray-800 text-white border-t border-x border-gray-600'
-          : 'bg-gray-900/60 text-gray-400 hover:text-white hover:bg-gray-800/60'
+          : pulse
+            ? 'bg-blue-900/80 text-blue-200 hover:bg-blue-800/80 animate-pulse border-t border-x border-blue-500/50'
+            : 'bg-gray-900/60 text-gray-400 hover:text-white hover:bg-gray-800/60'
       } ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
     >
       {label}
@@ -62,6 +66,7 @@ export default function MenuBar({ snapshot, game, activePanel, setActivePanel }:
           active={activePanel === 'sprint'}
           onClick={() => toggle('sprint')}
           badge={isPlannable ? '!' : undefined}
+          pulse={isPlannable && activePanel !== 'sprint'}
         />
         <MenuButton label="Team" active={activePanel === 'team'} onClick={() => toggle('team')} />
         <MenuButton
