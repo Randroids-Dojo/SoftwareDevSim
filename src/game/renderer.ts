@@ -105,7 +105,7 @@ export function createRenderer(canvas: HTMLCanvasElement): GameRenderer {
   camera.lookAt(BASE_LOOKAT)
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
-  renderer.setSize(canvas.clientWidth, canvas.clientHeight)
+  renderer.setSize(canvas.clientWidth, canvas.clientHeight, false)
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
@@ -150,15 +150,16 @@ export function createRenderer(canvas: HTMLCanvasElement): GameRenderer {
     animId = requestAnimationFrame(animate)
   }
 
-  // Handle resize
+  // Handle resize via ResizeObserver (more reliable than window resize on mobile)
   function onResize() {
     const w = canvas.clientWidth
     const h = canvas.clientHeight
     if (w === 0 || h === 0) return
-    renderer.setSize(w, h)
+    renderer.setSize(w, h, false)
     applyPanZoom()
   }
-  window.addEventListener('resize', onResize)
+  const resizeObserver = new ResizeObserver(onResize)
+  resizeObserver.observe(canvas)
 
   return {
     scene,
@@ -175,7 +176,7 @@ export function createRenderer(canvas: HTMLCanvasElement): GameRenderer {
     stop() {
       running = false
       cancelAnimationFrame(animId)
-      window.removeEventListener('resize', onResize)
+      resizeObserver.disconnect()
 
       // Dispose all geometries and materials to free VRAM
       scene.traverse((obj) => {
