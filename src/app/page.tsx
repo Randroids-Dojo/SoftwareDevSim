@@ -70,7 +70,7 @@ export default function Home() {
   }
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-gray-900">
+    <main className="relative w-screen h-dvh overflow-hidden bg-gray-900">
       <GameCanvas savedState={savedState} onGameReady={onGameReady} />
 
       {snapshot && game && (
