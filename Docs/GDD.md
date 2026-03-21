@@ -1,6 +1,6 @@
 # SoftwareDevSim — Game Design Document
 
-> This document is a living design spec. Fill it out iteratively as the game takes shape.
+> A voxel office sim where 3 developers build an app using XP/agile/lean practices with AI coding tools. The player manages sprints, assigns work, and balances velocity vs quality vs tech debt.
 
 ---
 
@@ -9,15 +9,15 @@
 **Title:** SoftwareDevSim
 **Genre:** Simulation / Management
 **Platform:** Web (browser-based)
-**Tech Stack:** Next.js, TypeScript, Upstash Redis
+**Tech Stack:** Next.js 15, TypeScript, Three.js (voxel rendering), Upstash Redis
 
 ### Elevator Pitch
 
-<!-- One-sentence description of the game experience -->
+Manage a 3-person dev team building an app — plan sprints, assign stories, toggle engineering practices, and discover that agentic AI coding is a force multiplier for your process, not a replacement for it.
 
 ### Target Audience
 
-<!-- Who is this game for? -->
+Software developers and engineering managers who enjoy simulation/management games and will appreciate the meta-humor of simulating their own work.
 
 ---
 
@@ -25,15 +25,23 @@
 
 ### Theme
 
-<!-- What is the game about at its heart? -->
+The real danger of AI coding isn't AI itself — it's bad engineering practices. Good process + AI = shipping fast with high quality. Bad process + AI = generating bad code faster.
 
 ### Player Fantasy
 
-<!-- What does the player get to feel/be? -->
+You're a tech lead who gets to prove that investing in engineering practices (TDD, CI, code review, sprint planning, refactoring) pays off — even when the pressure is to skip them and ship faster.
 
 ### Core Loop
 
-<!-- What does the player do repeatedly? Describe the minute-to-minute gameplay -->
+```
+Sprint Planning → Devs Work → Ship Release → User Feedback → Repeat
+```
+
+The player picks user stories from a backlog, assigns them to developers, and decides which engineering practices to invest in. Each sprint takes ~2 minutes of real time.
+
+### Win/Loss Conditions
+
+No explicit win/loss — the game is a sandbox. But tech debt > 0.7 triggers a "death spiral" where everything slows down, morale drops, and more shortcuts get taken. The implicit goal is to ship the most points with the highest quality.
 
 ---
 
@@ -41,19 +49,36 @@
 
 ### Primary Mechanics
 
-<!-- The main systems the player interacts with -->
+#### Engineering Practices (toggleable safety nets)
+
+| Practice | Effect | Without It |
+|----------|--------|------------|
+| Sprint Planning | Stories validated; fewer wasted features | 30% chance completed story is "wrong feature" |
+| TDD / Tests | Quality floor 0.85; bugs caught before shipping | Quality capped at 0.6; tech debt rises faster |
+| Code Review | Quality +0.15; catches architecture issues | Architecture degrades; subtle bugs compound |
+| CI/CD Pipeline | Broken builds caught instantly | Broken code ships silently |
+| Pair Programming | Knowledge sharing; 1.3x quality | Single points of failure; knowledge silos |
+| Refactoring Budget | Tech debt decreases each sprint | Tech debt only increases; eventual death spiral |
+
+#### AI Coding (always on — this is the future)
+
+All devs use agentic AI tools. AI multiplies your existing process:
+
+| Your Process | AI Effect |
+|-------------|-----------|
+| Good practices | 2x speed, quality stays high |
+| Some practices | 1.5x speed, quality gaps amplified |
+| No practices (yolo) | 2x speed, 2x tech debt |
 
 ### Secondary Mechanics
 
-<!-- Supporting systems that add depth -->
+- **Developer Needs:** morale, energy, focus (0-1 each, decay/restore)
+- **Tech Debt:** accumulates from missing practices, triggers death spiral at 0.7
+- **User Feedback:** random events based on quality/debt after each release
 
 ### Progression
 
-<!-- How does the player advance? What unlocks over time? -->
-
-### Win/Loss Conditions
-
-<!-- How does the game end? Can you lose? -->
+Sprints get harder as the backlog grows more complex. The codebase's quality/debt scores compound over time, making early practice investment critical.
 
 ---
 
@@ -61,15 +86,31 @@
 
 ### Setting
 
-<!-- Where and when does the game take place? -->
+A voxel office (~24x16x8 voxels). Orthographic camera, front wall open.
 
-### Characters / Entities
+### Office Layout
 
-<!-- Who or what populates the game world? -->
+| Location | Position | Purpose |
+|----------|----------|---------|
+| desk_0, desk_1 | Front-left pair | Paired desks |
+| desk_2, desk_3 | Front-right pair | Paired desks |
+| coffee | Back-right corner | Break spot |
+| meeting | Back-left | Standup circle |
+| whiteboard | Back-center | Kanban display + build light |
 
-### Narrative
+### Characters
 
-<!-- Is there a story? How is it delivered? -->
+Three developers with distinct traits:
+
+| Name | Trait | Description |
+|------|-------|-------------|
+| Alex | Architect | Thinks about structure; architecture-boosting |
+| Jordan | Craftsman | Meticulous; quality-boosting |
+| Sam | Hustler | Fast but sloppy; velocity-boosting |
+
+### Character Activities
+
+idle, moving, working (typing), pairing, meeting (talking), break (drinking coffee)
 
 ---
 
@@ -77,15 +118,38 @@
 
 ### Data Model
 
-<!-- Key entities and their relationships -->
+```
+Developer: id, name, trait, stats {morale, energy, focus},
+           currentActivity, assignedStoryId, position
+
+UserStory:  id, title, points (1/2/3/5/8), status (backlog→todo→in_progress→review→done),
+            quality, testCoverage, progress, wasPlanned, hasTests, wasReviewed, wasRefactored
+
+Sprint:     number, phase (planning|active|review|shipped), dayInSprint,
+            stories[], hadPlanning, hadRetro
+
+Codebase:   techDebt, quality, ciStatus, totalPointsShipped, releasesShipped, architecture
+
+GameState:  clock, developers[], sprint, backlog[], codebase, feedback[], practices, seed
+```
 
 ### State Management
 
-<!-- How is game state stored and synchronized? (Upstash Redis) -->
+- Game state is a single `GameState` object owned by the game engine
+- React polls it via `useGameState` hook (4x/sec)
+- Persistent storage via Upstash Redis with Zod validation
+
+### Game Clock
+
+- 1 real second = 5 game minutes
+- Work hours: 9am-6pm
+- Sprint length: 10 game days
 
 ### API Routes
 
-<!-- Key endpoints and their responsibilities -->
+- `GET /api/game/[id]` — Load game state
+- `POST /api/game/[id]` — Save game state (version guard)
+- `GET /api/health` — Health check
 
 ---
 
@@ -93,15 +157,24 @@
 
 ### Screens / Views
 
-<!-- Main screens the player sees -->
+Full-screen 3D canvas with overlay UI.
 
-### HUD / Overlays
+### HUD (top bar)
 
-<!-- In-game UI elements -->
+Sprint day, velocity, quality, morale, tech debt, CI status, points shipped
 
-### Responsive Design
+### Menu Bar (bottom)
 
-<!-- How does it adapt to different screen sizes? -->
+Sprint | Team | Backlog | Practices | Ship + speed controls (pause, 1x, 2x, 5x)
+
+### Panels (slide up from bottom)
+
+- **SprintPanel:** Pick stories for sprint, start with/without planning
+- **TeamPanel:** Assign stories to devs, view dev stats
+- **PracticesPanel:** Toggle engineering practices
+- **BacklogPanel:** View full backlog with status
+- **ShipPanel:** Ship release, view feedback
+- **KanbanOverlay:** Todo/InProgress/Review/Done columns
 
 ---
 
@@ -109,23 +182,31 @@
 
 ### Visual Style
 
-<!-- Art direction, color palette, inspiration -->
+Voxel art with an isometric-ish orthographic camera. Warm office colors. Monitor screens glow green (AI-assisted coding). Build light near whiteboard shows CI status.
+
+### Visual Polish
+
+- Terminal glow on all screens (AI is always on)
+- Pair programming: two devs at one desk
+- Standup: devs walk to meeting area, talk, return
+- Build light: green/red/yellow voxel
+- Thought bubbles: devs say things ("Tests passing!", "This architecture is clean", "Need coffee")
 
 ### Audio
 
-<!-- Music, SFX, ambient — or is this a silent game? -->
+Silent for MVP. Ambient office sounds possible future enhancement.
 
 ---
 
 ## 8. Multiplayer / Social
 
-<!-- Is there a multiplayer component? Shared state? Collaboration? -->
+Single player for MVP. No multiplayer planned.
 
 ---
 
 ## 9. Monetization
 
-<!-- Is this free? Open source? Any plans for monetization? -->
+Free and open source.
 
 ---
 
@@ -133,22 +214,23 @@
 
 | Milestone | Description | Status |
 |-----------|-------------|--------|
-| M0 — Scaffold | Project setup, CI/CD, basic Next.js app | In Progress |
-| M1 — Core Loop | Implement the primary game mechanic | Planned |
-| M2 — Persistence | Game state saved and loaded via Vercel KV | Planned |
-| M3 — Polish | UI, visuals, and feel improvements | Planned |
-| M4 — Social | Multiplayer or shared features | Planned |
+| M0 — Scaffold | Project setup, CI/CD, basic Next.js app | Done |
+| Phase 1 — Static Office | Voxel office renders with one dev typing | Done |
+| Phase 2 — Multi-Character | 3 devs with state machines, needs, pathfinding | Done |
+| Phase 3 — Sprint Engine | Sprint cycle, story progress, tech debt, feedback | Done |
+| Phase 4 — Player UI | Sprint planning, team mgmt, practices, shipping | Done |
+| Phase 5 — Visual Polish | Animations, thought bubbles, screen glow, build light | In Progress |
+| Phase 6 — Persistence | Save/load game state via Redis | Done |
+| New Game Flow | Intro screen, load saved state, auto-onboarding | Done |
+| Tooling | Prettier, ESLint strict, coverage thresholds, CI enforcement | Done |
 
 ---
 
 ## 11. Open Questions
 
-<!-- Things that need to be decided -->
-
-- What is the core game mechanic?
-- How much of "real" software development do we simulate vs. abstract?
-- Single player, multiplayer, or both?
-- What visual style fits best?
+- Should developer traits have mechanical effects beyond flavor?
+- How should the game introduce practices gradually (tutorial)?
+- Should there be explicit "game over" conditions?
 
 ---
 
@@ -156,8 +238,23 @@
 
 ### References & Inspiration
 
-<!-- Games, articles, or other media that inspire this project -->
+- **mi-casa-es-su-casa**: Three.js voxel rendering patterns, tick-based simulation, character state machines
+- **Game Dev Tycoon**: Management sim with cascading quality decisions
+- **Factorio**: Optimization loop, compound effects of early decisions
+
+### Tech Debt Sources
+
+| Source | Cause |
+|--------|-------|
+| No tests | Bugs slip through, patches create spaghetti |
+| No code review | Poor architecture decisions compound |
+| No refactoring | Complexity grows unchecked |
+| Building wrong thing | Dead code, pivots require rework |
+| Crunch/low morale | Sloppy shortcuts under pressure |
 
 ### Glossary
 
-<!-- Define game-specific terms here -->
+- **Sprint:** A 10-day work cycle
+- **Story:** A unit of work with point value
+- **Tech Debt:** Accumulated code quality problems (0-1 scale)
+- **Death Spiral:** Tech debt > 0.7, everything compounds negatively

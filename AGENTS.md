@@ -12,10 +12,14 @@
 ```bash
 npm run dev          # Start dev server
 npm run build        # Production build
-npm run lint         # ESLint
-npm run type-check   # TypeScript strict (tsc --noEmit)
-npm run test:unit    # Unit tests
-npm run test:smoke   # Smoke tests
+npm run format       # Prettier — autofix formatting (src + tests)
+npm run format:check # Prettier — check only, fails if unformatted
+npm run lint         # ESLint — errors on unused imports (src + tests)
+npm run lint:fix     # ESLint — autofix unused imports (src + tests)
+npm run type-check   # TypeScript strict (noUnusedLocals + noUnusedParameters)
+npm run test:unit     # Unit tests (fast, no coverage)
+npm run test:coverage # Unit tests + coverage (lines≥90%, branches≥80%, functions≥90%)
+npm run test:smoke    # Smoke tests
 ```
 
 ## Task Tracking with .dots
@@ -56,19 +60,26 @@ dot find "query"     # Search dots
 - Always close dots with a reason: `dot off <id> -r "reason"`
 - Create subtasks for partial progress rather than leaving dots open
 - Use dependencies (`-a`) to enforce ordering between dots
+- **Before starting implementation:** Create or verify dots exist for the work. Never code without a tracked task.
+- **Use `dot on <id>` before writing code** for a task, and `dot off <id>` when done
 
-## Unit Tests
+## Unit Tests & Coverage
 
 Tests live in `tests/unit/`. Run directly — no server needed:
 
 ```bash
-npm run test:unit
+npm run test:unit      # Fast iteration during development
+npm run test:coverage  # Before committing — enforces coverage thresholds
 ```
+
+Coverage thresholds (enforced in CI): **lines ≥ 90%**, **branches ≥ 80%**, **functions ≥ 90%**. Coverage is measured on `src/game/**` and `src/lib/**`.
 
 ### Rules for agents
 
 - Always run `npm run test:unit` after changes to game logic or data models
+- Run `npm run test:coverage` before committing to check coverage thresholds
 - If a test fails, fix the code — do not weaken the assertion
+- If coverage drops below thresholds, add tests — do not lower the thresholds
 
 ## Smoke Tests
 
@@ -78,9 +89,27 @@ npx wait-on http://localhost:3000
 npm run test:smoke
 ```
 
-## TypeScript
+## Formatting, Linting & TypeScript
 
-Always run `npm run type-check` after code changes. All code must compile with zero errors — strict mode is on.
+After code changes, always run (in order):
+
+1. `npm run format` — autofix formatting with Prettier
+2. `npm run lint:fix` — autofix unused imports with ESLint
+3. `npm run type-check` — must pass with zero errors
+
+All three checks must be clean before committing. CI runs `format:check`, `lint`, and `type-check` — PRs that fail any check are rejected. Prefix intentionally unused parameters with `_` (e.g. `_request`).
+
+### Strict Typing Rules (enforced by ESLint)
+
+- **No `any`** — `@typescript-eslint/no-explicit-any`. Use `unknown` at system boundaries and narrow with Zod.
+- **No non-null assertions** — `@typescript-eslint/no-non-null-assertion`. Validate instead of `!`.
+- **Consistent type imports** — `@typescript-eslint/consistent-type-imports`. Use `import type` for type-only imports.
+
+### Schema Validation Rules
+
+- All types in `src/game/types.ts` are derived from Zod schemas in `src/lib/schemas.ts` via `z.infer`. **Never define types manually that duplicate a schema.**
+- All data crossing system boundaries (API, Redis, localStorage) **must** be validated with `.safeParse()`.
+- Use `unknown` (not `any`) for unvalidated external data, then narrow with Zod.
 
 ## Upstash Redis
 
@@ -92,13 +121,19 @@ Game state is persisted in Upstash Redis (via Vercel Marketplace). The client li
 
 ## CI/CD
 
-- **CI** (`ci.yml`): Runs lint + type-check on PRs and pushes to main
+- **CI** (`ci.yml`): Runs format:check + lint + type-check + test:coverage on PRs and pushes to main
 - **Smoke** (`smoke.yml`): Builds and runs smoke tests on PRs and pushes to main
 - **Deploy**: Vercel Git integration auto-deploys on push to main and creates preview deploys for PRs (no GitHub Actions workflow needed)
 
 ## Game Design
 
-The Game Design Document lives at `Docs/GDD.md`. Update it as features are designed and implemented.
+The Game Design Document lives at `Docs/GDD.md`.
+
+### Rules for Agents
+
+- **Before implementing a new feature or system:** Update `Docs/GDD.md` with the design first. Plan before you code.
+- After completing a feature, update the milestones table in GDD.md to reflect current status.
+- If a design decision changes during implementation, update the GDD to match.
 
 ## Commits
 
