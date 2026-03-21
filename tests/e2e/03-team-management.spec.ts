@@ -25,7 +25,7 @@ test.describe('Team management', () => {
     await startPlanningButton.click()
 
     // Close sprint panel if still open
-    const sprintCloseBtn = page.locator('button[aria-label="Close"]').first()
+    const sprintCloseBtn = page.locator('button[aria-label="Collapse"]').first()
     if (await sprintCloseBtn.isVisible({ timeout: 2_000 }).catch(() => false)) {
       await sprintCloseBtn.click()
     }
