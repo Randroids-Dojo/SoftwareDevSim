@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
-import { kv } from '../../../../lib/kv'
+import { getKv } from '../../../../lib/kv'
 import {
   GAME_STATE_VERSION,
   GameStateSchema,
@@ -13,7 +13,7 @@ function gameKey(id: string): string {
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const data = await kv.get(gameKey(id))
+  const data = await getKv().get(gameKey(id))
 
   if (!data) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     savedAt: Date.now(),
   }
 
-  await kv.set(gameKey(id), persisted)
+  await getKv().set(gameKey(id), persisted)
 
   return NextResponse.json({ ok: true })
 }

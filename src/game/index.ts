@@ -193,14 +193,21 @@ export function createGame(canvas: HTMLCanvasElement, existingState?: GameState)
       const dev = state.developers.find((d) => d.id === devId)
       const story = state.backlog.find((s) => s.id === storyId)
       if (dev && story) {
-        // Clear any other dev's assignment to this story
-        for (const d of state.developers) {
-          if (d.assignedStoryId === storyId && d.id !== devId) {
+        const othersOnStory = state.developers.filter(
+          (d) => d.assignedStoryId === storyId && d.id !== devId,
+        )
+
+        // Allow two devs on one story when pair programming is enabled
+        const maxDevs = state.practices.pairProgramming ? 2 : 1
+        if (othersOnStory.length >= maxDevs) {
+          // Evict existing devs to make room
+          for (const d of othersOnStory) {
             d.assignedStoryId = null
             const inst = developers.find((di) => di.state.id === d.id)
             if (inst) inst.state.assignedStoryId = null
           }
         }
+
         dev.assignedStoryId = storyId
         story.status = 'in_progress'
         const devInstance = developers.find((d) => d.state.id === devId)

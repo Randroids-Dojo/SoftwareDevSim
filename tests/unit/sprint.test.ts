@@ -160,6 +160,64 @@ describe('Story Progress', () => {
     assert.equal(updated[0].status, 'done')
     assert.equal(updated[0].wasReviewed, true)
   })
+
+  it('applies pairing quality boost when dev activity is pairing', () => {
+    const stories = [makeStory({ progress: 0.998 })]
+    // Use a solo working dev as baseline
+    const soloDevs = [makeDev({ currentActivity: 'working' })]
+    const soloResult = tickStoryProgress(
+      stories,
+      soloDevs,
+      makePractices({ tdd: true }),
+      makeClock(),
+    )
+    const soloCompleted = soloResult.find((s) => s.progress >= 1)
+    assert.ok(soloCompleted, 'Expected solo story to complete')
+
+    // Now test with pairing — the 1.3x multiplier feeds into computeStoryQuality
+    const pairStories = [makeStory({ progress: 0.998 })]
+    const pairDevs = [
+      makeDev({ id: 'dev-0', currentActivity: 'pairing', assignedStoryId: 'story-1' }),
+      makeDev({
+        id: 'dev-1',
+        name: 'Jordan',
+        currentActivity: 'pairing',
+        assignedStoryId: 'story-1',
+      }),
+    ]
+    const pairResult = tickStoryProgress(
+      pairStories,
+      pairDevs,
+      makePractices({ pairProgramming: true, tdd: true }),
+      makeClock(),
+    )
+    const pairCompleted = pairResult.find((s) => s.progress >= 1)
+    assert.ok(pairCompleted, 'Expected paired story to complete')
+    assert.ok(
+      pairCompleted.quality >= soloCompleted.quality,
+      `Pairing quality (${pairCompleted.quality}) should be >= solo quality (${soloCompleted.quality})`,
+    )
+  })
+
+  it('progresses story with two devs assigned (pair programming)', () => {
+    const stories = [makeStory()]
+    const devs = [
+      makeDev({ id: 'dev-0', currentActivity: 'pairing', assignedStoryId: 'story-1' }),
+      makeDev({
+        id: 'dev-1',
+        name: 'Jordan',
+        currentActivity: 'pairing',
+        assignedStoryId: 'story-1',
+      }),
+    ]
+    const updated = tickStoryProgress(
+      stories,
+      devs,
+      makePractices({ pairProgramming: true }),
+      makeClock(),
+    )
+    assert.ok(updated[0].progress > 0, 'Expected progress from paired devs')
+  })
 })
 
 describe('Sprint Velocity', () => {
