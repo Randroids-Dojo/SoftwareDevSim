@@ -292,6 +292,22 @@ export function createGame(canvas: HTMLCanvasElement, existingState?: GameState)
       }
       state.clock.paused = wasPaused
     },
+
+    applyPanDeltaPixels(dx: number, dy: number) {
+      gameRenderer.applyPanDeltaPixels(dx, dy)
+    },
+
+    applyZoomScale(factor: number) {
+      gameRenderer.applyZoomScale(factor)
+    },
+
+    applyRotationDelta(deltaRadians: number) {
+      gameRenderer.applyRotationDelta(deltaRadians)
+    },
+
+    resetCamera() {
+      gameRenderer.resetCamera()
+    },
   }
 
   return instance

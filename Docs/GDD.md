@@ -157,7 +157,18 @@ GameState:  clock, developers[], sprint, backlog[], codebase, feedback[], practi
 
 ### Screens / Views
 
-Full-screen 3D canvas with overlay UI.
+Full-screen 3D canvas with overlay UI. Supports camera zoom and panning.
+
+### Camera Controls
+
+| Input | Action |
+|-------|--------|
+| Mouse drag | Pan camera |
+| Mouse wheel | Zoom in/out |
+| Single-finger drag (touch) | Pan camera |
+| Two-finger pinch (touch) | Zoom in/out |
+
+Zoom range: 0.5x (zoomed out) to 4x (zoomed in). Pan is clamped to keep the office in view. Camera pans in screen-space (content follows pointer/finger).
 
 ### HUD (top bar)
 
@@ -220,6 +231,7 @@ Free and open source.
 | Phase 3 — Sprint Engine | Sprint cycle, story progress, tech debt, feedback | Done |
 | Phase 4 — Player UI | Sprint planning, team mgmt, practices, shipping | Done |
 | Phase 5 — Visual Polish | Animations, thought bubbles, screen glow, build light | In Progress |
+| Camera Controls | Zoom and pan (mouse wheel/drag, touch pinch/drag) | Done |
 | Phase 6 — Persistence | Save/load game state via Redis | Done |
 | New Game Flow | Intro screen, load saved state, auto-onboarding | Done |
 | Tooling | Prettier, ESLint strict, coverage thresholds, CI enforcement | Done |

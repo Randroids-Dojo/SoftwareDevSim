@@ -155,8 +155,29 @@ The Game Design Document lives at `Docs/GDD.md`.
 - After completing a feature, update the milestones table in GDD.md to reflect current status.
 - If a design decision changes during implementation, update the GDD to match.
 
+## Pre-Push Checklist
+
+Before pushing any branch, **always** run the full verification sequence and fix all errors:
+
+```bash
+npm run format
+npm run lint:fix
+npm run build
+```
+
+`npm run build` runs the production Next.js build, which includes TypeScript compilation **and** ESLint. A Vercel deploy will fail on any error this catches, so never push without a clean build.
+
+## No Broken Windows
+
+If you encounter a broken or misconfigured tool, flaky script, stale dependency, or any other pre-existing issue **while working on a task**, fix it right then — do not skip it, work around it, or label it "pre-existing." Broken infrastructure left unfixed causes compounding failures. Treat every red signal as your responsibility, regardless of who introduced it.
+
+## Boy Scout Rule
+
+Leave every file you touch cleaner than you found it. When editing a file, fix nearby issues you notice: dead imports, unclear names, stale comments, inconsistent formatting, missing type annotations on the lines you're already changing. Do not make sweeping unrelated refactors — keep improvements scoped to the files and functions you are already working in.
+
 ## Commits
 
+- **Before every commit**, do two rounds of review and cleanup.
 - One logical unit of work per commit
 - Do not push unless explicitly instructed
 - Do not include AI attribution in commit messages
