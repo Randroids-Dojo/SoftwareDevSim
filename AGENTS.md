@@ -167,6 +167,10 @@ npm run build
 
 `npm run build` runs the production Next.js build, which includes TypeScript compilation **and** ESLint. A Vercel deploy will fail on any error this catches, so never push without a clean build.
 
+## No Broken Windows
+
+If you encounter a broken or misconfigured tool, flaky script, stale dependency, or any other pre-existing issue **while working on a task**, fix it right then — do not skip it, work around it, or label it "pre-existing." Broken infrastructure left unfixed causes compounding failures. Treat every red signal as your responsibility, regardless of who introduced it.
+
 ## Commits
 
 - One logical unit of work per commit

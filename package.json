@@ -6,8 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "ESLINT_USE_FLAT_CONFIG=false npx eslint --max-warnings 0 'src/**/*.{ts,tsx}' 'tests/**/*.ts'",
-    "lint:fix": "ESLINT_USE_FLAT_CONFIG=false npx eslint --max-warnings 0 'src/**/*.{ts,tsx}' 'tests/**/*.ts' --fix",
+    "lint": "npx eslint --max-warnings 0 'src/**/*.{ts,tsx}' 'tests/**/*.ts'",
+    "lint:fix": "npx eslint --max-warnings 0 'src/**/*.{ts,tsx}' 'tests/**/*.ts' --fix",
     "format": "npx prettier --write 'src/**/*.{ts,tsx}' 'tests/**/*.ts'",
     "format:check": "npx prettier --check 'src/**/*.{ts,tsx}' 'tests/**/*.ts'",
     "type-check": "tsc --noEmit",
@@ -26,6 +26,8 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.58.2",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
