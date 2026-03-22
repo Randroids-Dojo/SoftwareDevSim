@@ -10,8 +10,8 @@ export const PALETTE = {
   // Furniture
   deskTop: '#8B6914',
   deskLegs: '#6b4f10',
-  chair: '#2c3e50',
-  chairSeat: '#34495e',
+  chair: '#5a6e7f',
+  chairSeat: '#6b7d8e',
 
   // Tech
   monitorFrame: '#1a1a2e',
