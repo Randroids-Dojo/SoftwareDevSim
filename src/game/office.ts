@@ -140,6 +140,25 @@ export function createOffice(): OfficeScene {
   buildPlant(group, 0.5, 0.5)
   buildPlant(group, 23, 0.5)
 
+  // Standup circle positions in front of the whiteboard
+  const STANDUP_CENTER: Vec3 = [12, 0, 12]
+  const STANDUP_RADIUS = 1.8
+  const MAX_STANDUP_SLOTS = 6
+  const standupLocations: NamedLocation[] = []
+  for (let i = 0; i < MAX_STANDUP_SLOTS; i++) {
+    const angle = (i / MAX_STANDUP_SLOTS) * Math.PI * 2
+    const x = STANDUP_CENTER[0] + Math.cos(angle) * STANDUP_RADIUS
+    const z = STANDUP_CENTER[2] + Math.sin(angle) * STANDUP_RADIUS
+    // Face toward center of circle
+    const dx = STANDUP_CENTER[0] - x
+    const dz = STANDUP_CENTER[2] - z
+    standupLocations.push({
+      name: `standup_${i}`,
+      position: [x, 0, z],
+      seatDirection: [dx, 0, dz],
+    })
+  }
+
   const locations: NamedLocation[] = [
     { name: 'desk_0', position: [3.5, 0, 1.5], seatDirection: [0, 0, 1] },
     { name: 'desk_1', position: [7.5, 0, 1.5], seatDirection: [0, 0, 1] },
@@ -148,6 +167,7 @@ export function createOffice(): OfficeScene {
     { name: 'coffee', position: [22, 0, 14] },
     { name: 'meeting', position: [3, 0, 13] },
     { name: 'whiteboard', position: [12, 0, 14] },
+    ...standupLocations,
   ]
 
   return { group, buildLight, locations, screenMeshes, chairGroups }

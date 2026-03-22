@@ -5,6 +5,7 @@ import { transition } from './stateMachine'
 import { moveToward, findLocation, facingAngle } from './pathfinder'
 import { tickNeeds } from './needs'
 import { decideActivity } from './schedule'
+import { type ChatBubble, createChatBubble, STANDUP_LINES, STANDDOWN_LINES } from './chatBubble'
 
 const ACTIVITY_TO_ANIMATION: Record<ActivityState, AnimationName> = {
   idle: 'sit',
@@ -12,19 +13,35 @@ const ACTIVITY_TO_ANIMATION: Record<ActivityState, AnimationName> = {
   working: 'type',
   meeting: 'talk',
   break: 'drink',
+  standup: 'talk',
 }
+
+/** Seconds between chat bubble text changes during standup. */
+const BUBBLE_CHANGE_INTERVAL = 3
 
 export class Developer {
   state: WorkerState
   mesh: CharacterMesh
+  chatBubble: ChatBubble | null = null
 
   private animTime = 0
   private facing = 0
+  private bubbleTimer = 0
+  private lastBubbleIndex = -1
 
   constructor(state: WorkerState, colorIndex: number) {
     this.state = state
     this.mesh = createCharacterMesh(colorIndex)
     this.syncMeshPosition()
+  }
+
+  /** Lazily create the chat bubble (requires DOM, so defer until first use). */
+  private ensureChatBubble(): ChatBubble {
+    if (!this.chatBubble) {
+      this.chatBubble = createChatBubble()
+      this.mesh.root.add(this.chatBubble.sprite)
+    }
+    return this.chatBubble
   }
 
   /** Run one game-minute tick. */
@@ -76,6 +93,36 @@ export class Developer {
     const animation = ACTIVITY_TO_ANIMATION[this.state.currentActivity]
     applyAnimation(this.mesh, animation, this.animTime)
     this.syncMeshPosition()
+  }
+
+  /** Show or hide the chat bubble based on current activity. */
+  updateChatBubble(dt: number, clock: GameClock) {
+    const inStandup = this.state.currentActivity === 'standup'
+
+    if (!inStandup) {
+      if (this.chatBubble?.visible) {
+        this.chatBubble.hide()
+      }
+      this.bubbleTimer = 0
+      this.lastBubbleIndex = -1
+      return
+    }
+
+    const bubble = this.ensureChatBubble()
+    this.bubbleTimer += dt
+
+    if (this.bubbleTimer >= BUBBLE_CHANGE_INTERVAL || this.lastBubbleIndex === -1) {
+      this.bubbleTimer = 0
+      // Pick whether we're in standup or standdown based on the hour
+      const lines = clock.hour < 12 ? STANDUP_LINES : STANDDOWN_LINES
+      // Pick a new random line different from the last
+      let idx = Math.floor(Math.random() * lines.length)
+      if (idx === this.lastBubbleIndex && lines.length > 1) {
+        idx = (idx + 1) % lines.length
+      }
+      this.lastBubbleIndex = idx
+      bubble.show(lines[idx])
+    }
   }
 
   private syncMeshPosition() {

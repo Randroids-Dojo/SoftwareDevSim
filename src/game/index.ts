@@ -109,6 +109,7 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
     // Animate characters every frame
     for (const worker of workers) {
       worker.animate(dt)
+      worker.updateChatBubble(dt, state.clock)
     }
 
     // Animate chairs

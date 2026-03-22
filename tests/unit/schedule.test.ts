@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { decideActivity } from '../../src/game/character/schedule'
+import { decideActivity, isStandupTime } from '../../src/game/character/schedule'
 import type { WorkerState, GameClock } from '../../src/game/types'
 
 function makeWorker(role: WorkerState['role'], overrides?: Partial<WorkerState>): WorkerState {
@@ -26,6 +26,36 @@ function makeClock(overrides?: Partial<GameClock>): GameClock {
     ...overrides,
   }
 }
+
+describe('isStandupTime', () => {
+  it('returns true at 9:00', () => {
+    assert.equal(isStandupTime(makeClock({ hour: 9, minute: 0 })), true)
+  })
+
+  it('returns true at 9:05', () => {
+    assert.equal(isStandupTime(makeClock({ hour: 9, minute: 5 })), true)
+  })
+
+  it('returns false at 9:10', () => {
+    assert.equal(isStandupTime(makeClock({ hour: 9, minute: 10 })), false)
+  })
+
+  it('returns true at 17:50', () => {
+    assert.equal(isStandupTime(makeClock({ hour: 17, minute: 50 })), true)
+  })
+
+  it('returns true at 17:55', () => {
+    assert.equal(isStandupTime(makeClock({ hour: 17, minute: 55 })), true)
+  })
+
+  it('returns false at 17:49', () => {
+    assert.equal(isStandupTime(makeClock({ hour: 17, minute: 49 })), false)
+  })
+
+  it('returns false during normal work hours', () => {
+    assert.equal(isStandupTime(makeClock({ hour: 12, minute: 30 })), false)
+  })
+})
 
 describe('decideActivity', () => {
   it('developer works at desk during work hours', () => {
@@ -83,5 +113,40 @@ describe('decideActivity', () => {
   it('worker index > 3 gets whiteboard location', () => {
     const decision = decideActivity(makeWorker('developer', { id: 'worker-5' }), makeClock())
     assert.equal(decision.targetLocation, 'whiteboard')
+  })
+
+  it('all roles go to standup at 9:00', () => {
+    const clock = makeClock({ hour: 9, minute: 5 })
+    for (const role of ['developer', 'designer', 'product_owner', 'manager'] as const) {
+      const decision = decideActivity(makeWorker(role), clock)
+      assert.equal(decision.activity, 'standup', `${role} should be in standup`)
+      assert.equal(decision.targetLocation, 'standup_0')
+    }
+  })
+
+  it('all roles go to standdown at 17:50', () => {
+    const clock = makeClock({ hour: 17, minute: 55 })
+    for (const role of ['developer', 'designer', 'product_owner', 'manager'] as const) {
+      const decision = decideActivity(makeWorker(role), clock)
+      assert.equal(decision.activity, 'standup', `${role} should be in standdown`)
+      assert.equal(decision.targetLocation, 'standup_0')
+    }
+  })
+
+  it('assigns different standup slots per worker index', () => {
+    const clock = makeClock({ hour: 9, minute: 5 })
+    const d0 = decideActivity(makeWorker('developer', { id: 'worker-0' }), clock)
+    const d1 = decideActivity(makeWorker('developer', { id: 'worker-1' }), clock)
+    const d2 = decideActivity(makeWorker('developer', { id: 'worker-2' }), clock)
+    assert.equal(d0.targetLocation, 'standup_0')
+    assert.equal(d1.targetLocation, 'standup_1')
+    assert.equal(d2.targetLocation, 'standup_2')
+  })
+
+  it('very low energy worker skips standup for break', () => {
+    const clock = makeClock({ hour: 9, minute: 5 })
+    const decision = decideActivity(makeWorker('developer', { energy: 0.03 }), clock)
+    assert.equal(decision.activity, 'break')
+    assert.equal(decision.targetLocation, 'coffee')
   })
 })

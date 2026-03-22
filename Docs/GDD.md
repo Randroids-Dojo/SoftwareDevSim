@@ -127,7 +127,18 @@ Workers take coffee breaks when energy is low. Outside work hours (before 9am, a
 
 ### Character Activities
 
-idle, moving, working (typing), meeting (talking), break (drinking coffee)
+idle, moving, working (typing), meeting (talking), break (drinking coffee), standup (daily sync)
+
+### Daily Standup & Standdown
+
+Once per day, the entire team gathers for two brief ceremonies:
+
+- **Standup (9:00–9:10):** All workers walk to the whiteboard area and form a circle. They play a talk animation and show speech bubbles with standup-style updates ("Working on the API", "PR needs review", "Tests are green!").
+- **Standdown (17:50–18:00):** Same gathering at end of day, with wrap-up messages ("Good progress today!", "Let's ship it tomorrow", "Done for today!").
+
+After each ceremony, workers return to their desks and sit down without intermediate idle animation. Workers with critically low energy (< 5%) skip standup for a coffee break.
+
+Circle positions are generated dynamically around the whiteboard (6 slots, radius 1.8 units, center at [12, 0, 12]).
 
 ---
 
@@ -211,8 +222,9 @@ Voxel art with an isometric-ish orthographic camera. Warm office colors. Monitor
 - **sit:** Seated idle at desk
 - **type:** Seated typing (arms on keyboard)
 - **walk:** Walking between locations
-- **talk:** Standing, gesticulating (meetings)
+- **talk:** Standing, gesticulating (meetings & standup)
 - **drink:** Coffee break (arm raised)
+- **chat bubble:** Canvas-rendered speech sprite shown during standup/standdown
 
 ### Audio
 
@@ -242,6 +254,7 @@ Free and open source.
 | Camera Controls | Zoom, pan, rotate (mouse + touch) | Done |
 | Tooling | Prettier, ESLint strict, coverage thresholds, CI enforcement | Done |
 | Basic Game Loop | Choose app, hire team, auto-play 4 sprints, end screen with grading | Done |
+| Standup/Standdown | Daily team ceremonies with circle formation and chat bubbles | Done |
 
 ---
 
