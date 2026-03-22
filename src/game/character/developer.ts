@@ -1,4 +1,4 @@
-import type { ActivityState, GameClock, NamedLocation, WorkerState } from '../types'
+import type { ActivityState, GameClock, NamedLocation, Vec3, WorkerState } from '../types'
 import { type CharacterMesh, createCharacterMesh } from './mesh'
 import { type AnimationName, applyAnimation } from './animations'
 import { transition } from './stateMachine'
@@ -16,6 +16,9 @@ const ACTIVITY_TO_ANIMATION: Record<ActivityState, AnimationName> = {
   standup: 'talk',
 }
 
+/** Base movement speed in units per second (scaled by clock speed at runtime). */
+const FRAME_MOVE_SPEED = 3
+
 /** Seconds between chat bubble text changes during standup. */
 const BUBBLE_CHANGE_INTERVAL = 3
 
@@ -28,6 +31,12 @@ export class Developer {
   private facing = 0
   private bubbleTimer = 0
   private lastBubbleIndex = -1
+
+  // Target tracking — set by tick(), consumed by animate()
+  private targetPosition: Vec3 | null = null
+  private targetSeatDirection: Vec3 | null = null
+  private desiredActivity: ActivityState = 'idle'
+  private clockSpeed = 1
 
   constructor(state: WorkerState, colorIndex: number) {
     this.state = state
@@ -44,52 +53,57 @@ export class Developer {
     return this.chatBubble
   }
 
-  /** Run one game-minute tick. */
+  /** Run one game-minute tick — AI decisions only, no movement. */
   tick(clock: GameClock, locations: NamedLocation[]) {
-    // Update needs
     this.state = tickNeeds(this.state)
+    this.clockSpeed = clock.speed
 
-    // Decide what to do based on role
     const decision = decideActivity(this.state, clock)
+    this.desiredActivity = decision.activity
 
-    const desiredActivity = decision.activity
-    const targetLocation = decision.targetLocation
-
-    // Check if we need to move to the target location first
-    const targetLoc = findLocation(locations, targetLocation)
-    if (!targetLoc) {
-      this.state.currentActivity = transition(this.state.currentActivity, desiredActivity)
-      return
-    }
-
-    const dist = Math.hypot(
-      targetLoc.position[0] - this.state.position[0],
-      targetLoc.position[2] - this.state.position[2],
-    )
-
-    if (dist > 0.5) {
-      this.state.currentActivity = transition(this.state.currentActivity, 'moving')
-      this.facing = facingAngle(this.state.position, targetLoc.position)
-      const result = moveToward(this.state.position, targetLoc.position)
-      this.state.position = result.position
-
-      if (result.arrived) {
-        this.state.currentActivity = transition('moving', desiredActivity)
-        if (targetLoc.seatDirection) {
-          this.facing = Math.atan2(targetLoc.seatDirection[0], targetLoc.seatDirection[2])
-        }
-      }
+    const targetLoc = findLocation(locations, decision.targetLocation)
+    if (targetLoc) {
+      this.targetPosition = targetLoc.position
+      this.targetSeatDirection = targetLoc.seatDirection ?? null
     } else {
-      this.state.currentActivity = transition(this.state.currentActivity, desiredActivity)
-      if (targetLoc.seatDirection) {
-        this.facing = Math.atan2(targetLoc.seatDirection[0], targetLoc.seatDirection[2])
-      }
+      this.targetPosition = null
+      this.targetSeatDirection = null
+      this.state.currentActivity = transition(this.state.currentActivity, decision.activity)
     }
   }
 
-  /** Update visual representation. Called every render frame. */
+  /** Update visuals and movement. Called every render frame (60fps). */
   animate(dt: number) {
     this.animTime += dt
+
+    // Move toward target at frame rate (smooth, speed-scaled)
+    if (this.targetPosition) {
+      const dist = Math.hypot(
+        this.targetPosition[0] - this.state.position[0],
+        this.targetPosition[2] - this.state.position[2],
+      )
+
+      if (dist > 0.5) {
+        this.state.currentActivity = transition(this.state.currentActivity, 'moving')
+        this.facing = facingAngle(this.state.position, this.targetPosition)
+        const speed = FRAME_MOVE_SPEED * dt * Math.max(1, this.clockSpeed)
+        const result = moveToward(this.state.position, this.targetPosition, speed)
+        this.state.position = result.position
+
+        if (result.arrived) {
+          this.state.currentActivity = transition('moving', this.desiredActivity)
+          if (this.targetSeatDirection) {
+            this.facing = Math.atan2(this.targetSeatDirection[0], this.targetSeatDirection[2])
+          }
+        }
+      } else {
+        this.state.currentActivity = transition(this.state.currentActivity, this.desiredActivity)
+        if (this.targetSeatDirection) {
+          this.facing = Math.atan2(this.targetSeatDirection[0], this.targetSeatDirection[2])
+        }
+      }
+    }
+
     const animation = ACTIVITY_TO_ANIMATION[this.state.currentActivity]
     applyAnimation(this.mesh, animation, this.animTime)
     this.syncMeshPosition()

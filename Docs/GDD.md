@@ -133,10 +133,12 @@ idle, moving, working (typing), meeting (talking), break (drinking coffee), stan
 
 Once per day, the entire team gathers for two brief ceremonies:
 
-- **Standup (9:00–9:10):** All workers walk to the whiteboard area and form a circle. They play a talk animation and show speech bubbles with standup-style updates ("Working on the API", "PR needs review", "Tests are green!").
-- **Standdown (17:50–18:00):** Same gathering at end of day, with wrap-up messages ("Good progress today!", "Let's ship it tomorrow", "Done for today!").
+- **Standup (9:00–11:00):** All workers walk to the whiteboard area and form a circle. They play a talk animation and show speech bubbles with standup-style updates ("Working on the API", "PR needs review", "Tests are green!").
+- **Standdown (15:30–18:00):** Same gathering at end of day, with wrap-up messages ("Good progress today!", "Let's ship it tomorrow", "Done for today!").
 
-After each ceremony, workers return to their desks and sit down without intermediate idle animation. Workers with critically low energy (< 5%) skip standup for a coffee break.
+Windows are deliberately wide so the ceremonies remain visible at 20× game speed, where each tick jumps ~100 game minutes. Movement is per-frame (60fps) and scales with clock speed so characters walk briskly at fast-forward.
+
+After each ceremony, workers return to their desks and sit down. Workers with critically low energy (< 5%) skip standup for a coffee break.
 
 Circle positions are generated dynamically around the whiteboard (6 slots, radius 1.8 units, center at [12, 0, 12]).
 

@@ -16,10 +16,11 @@ function makeWorker(role: WorkerState['role'], overrides?: Partial<WorkerState>)
   }
 }
 
+/** Default clock at 12:00 — middle of workday, outside standup windows. */
 function makeClock(overrides?: Partial<GameClock>): GameClock {
   return {
     day: 1,
-    hour: 10,
+    hour: 12,
     minute: 0,
     paused: false,
     speed: 1,
@@ -28,32 +29,36 @@ function makeClock(overrides?: Partial<GameClock>): GameClock {
 }
 
 describe('isStandupTime', () => {
-  it('returns true at 9:00', () => {
+  it('returns true at 9:00 (morning standup)', () => {
     assert.equal(isStandupTime(makeClock({ hour: 9, minute: 0 })), true)
   })
 
-  it('returns true at 9:05', () => {
-    assert.equal(isStandupTime(makeClock({ hour: 9, minute: 5 })), true)
+  it('returns true at 10:40 (still morning standup)', () => {
+    assert.equal(isStandupTime(makeClock({ hour: 10, minute: 40 })), true)
   })
 
-  it('returns false at 9:10', () => {
-    assert.equal(isStandupTime(makeClock({ hour: 9, minute: 10 })), false)
+  it('returns false at 11:00 (standup over)', () => {
+    assert.equal(isStandupTime(makeClock({ hour: 11, minute: 0 })), false)
   })
 
-  it('returns true at 17:50', () => {
-    assert.equal(isStandupTime(makeClock({ hour: 17, minute: 50 })), true)
+  it('returns false at 12:00 (midday work)', () => {
+    assert.equal(isStandupTime(makeClock({ hour: 12, minute: 0 })), false)
   })
 
-  it('returns true at 17:55', () => {
-    assert.equal(isStandupTime(makeClock({ hour: 17, minute: 55 })), true)
+  it('returns false at 15:29 (just before standdown)', () => {
+    assert.equal(isStandupTime(makeClock({ hour: 15, minute: 29 })), false)
   })
 
-  it('returns false at 17:49', () => {
-    assert.equal(isStandupTime(makeClock({ hour: 17, minute: 49 })), false)
+  it('returns true at 15:30 (standdown starts)', () => {
+    assert.equal(isStandupTime(makeClock({ hour: 15, minute: 30 })), true)
   })
 
-  it('returns false during normal work hours', () => {
-    assert.equal(isStandupTime(makeClock({ hour: 12, minute: 30 })), false)
+  it('returns true at 16:00 (standdown)', () => {
+    assert.equal(isStandupTime(makeClock({ hour: 16, minute: 0 })), true)
+  })
+
+  it('returns true at 17:20 (standdown)', () => {
+    assert.equal(isStandupTime(makeClock({ hour: 17, minute: 20 })), true)
   })
 })
 
@@ -124,8 +129,8 @@ describe('decideActivity', () => {
     }
   })
 
-  it('all roles go to standdown at 17:50', () => {
-    const clock = makeClock({ hour: 17, minute: 55 })
+  it('all roles go to standdown at 16:00', () => {
+    const clock = makeClock({ hour: 16, minute: 0 })
     for (const role of ['developer', 'designer', 'product_owner', 'manager'] as const) {
       const decision = decideActivity(makeWorker(role), clock)
       assert.equal(decision.activity, 'standup', `${role} should be in standdown`)

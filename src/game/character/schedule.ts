@@ -5,16 +5,19 @@ export type ScheduleDecision = {
   targetLocation: string
 }
 
-/** Standup: 9:00–9:10. Standdown: 17:50–18:00. */
-const STANDUP_START = 9
-const STANDUP_END_MINUTE = 10
-const STANDDOWN_HOUR = 17
-const STANDDOWN_START_MINUTE = 50
-
-/** True when the team should be in standup or standdown. */
+/**
+ * Standup: 9:00–11:00.  Standdown: 15:30–18:00.
+ *
+ * Windows are wide so the ceremonies are visible at 20x game speed.
+ * At 20× each tick jumps ~100 game-minutes; these windows guarantee
+ * at least 2 ticks land inside each ceremony.
+ */
 export function isStandupTime(clock: GameClock): boolean {
-  if (clock.hour === STANDUP_START && clock.minute < STANDUP_END_MINUTE) return true
-  if (clock.hour === STANDDOWN_HOUR && clock.minute >= STANDDOWN_START_MINUTE) return true
+  // Morning standup — first 2 hours
+  if (clock.hour >= 9 && clock.hour < 11) return true
+  // End-of-day standdown — last ~2.5 hours
+  if (clock.hour >= 16) return true
+  if (clock.hour === 15 && clock.minute >= 30) return true
   return false
 }
 
