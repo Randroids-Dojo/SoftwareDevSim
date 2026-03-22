@@ -4,7 +4,7 @@
 
 - **Next.js** (App Router, TypeScript strict mode)
 - **Tailwind CSS** — styling
-- **Upstash Redis** — persistent game state
+- **Three.js** — voxel 3D rendering
 - **Zod** — runtime validation
 
 ## Commands
@@ -73,7 +73,7 @@ npm run test:unit      # Fast iteration during development
 npm run test:coverage  # Before committing — enforces coverage thresholds
 ```
 
-Coverage thresholds (enforced in CI): **lines ≥ 90%**, **branches ≥ 80%**, **functions ≥ 90%**. Coverage is measured on `src/game/**` and `src/lib/**`.
+Coverage thresholds (enforced in CI): **lines ≥ 90%**, **branches ≥ 80%**, **functions ≥ 90%**. Coverage is measured on pure game logic files: `src/game/scoring.ts`, `src/game/simulation/**`, and select character modules (`needs.ts`, `schedule.ts`, `stateMachine.ts`, `pathfinder.ts`). Browser-only 3D files (renderer, office, mesh, animations) are excluded.
 
 ### Rules for agents
 
@@ -100,13 +100,13 @@ npm run test:e2e:headed    # Headed (watch the tests play the game)
 npx playwright test --ui   # Interactive UI mode for debugging
 ```
 
-Tests cover: intro/start flow, sprint planning, team management, speed controls, practices panel, ship release, and panel toggling. The game instance is exposed on `window.__game` for E2E tests to call `fastForward()` or manipulate state directly.
+Tests cover the full game flow: title screen, app selection, team hiring, sprint auto-play, end screen, and retry. The game instance is exposed on `window.__game` for E2E tests to manipulate state directly.
 
 ### Rules for agents
 
 - Always run `npm run test:e2e` after changes to UI components or game logic
 - If a test fails, fix the code — do not weaken the assertion
-- For tests that need game state advancement, use `page.evaluate` to call `window.__game.fastForward(ticks)` or manipulate state directly. Do NOT wait for real-time simulation (rAF is too slow).
+- For tests that need to advance the game, use `page.evaluate` to mutate `window.__game.state` directly. Do NOT wait for real-time simulation (rAF is too slow).
 
 ## Formatting, Linting & TypeScript
 
@@ -127,16 +127,7 @@ All three checks must be clean before committing. CI runs `format:check`, `lint`
 ### Schema Validation Rules
 
 - All types in `src/game/types.ts` are derived from Zod schemas in `src/lib/schemas.ts` via `z.infer`. **Never define types manually that duplicate a schema.**
-- All data crossing system boundaries (API, Redis, localStorage) **must** be validated with `.safeParse()`.
 - Use `unknown` (not `any`) for unvalidated external data, then narrow with Zod.
-
-## Upstash Redis
-
-Game state is persisted in Upstash Redis (via Vercel Marketplace). The client lives at `src/lib/kv.ts`.
-
-- All reads must use Zod schema validation (`.safeParse()`)
-- Use key prefixes to namespace data (e.g. `game:`, `player:`)
-- Environment variables: `KV_REST_API_URL` and `KV_REST_API_TOKEN` in `.env.local`
 
 ## CI/CD
 
@@ -154,6 +145,38 @@ The Game Design Document lives at `Docs/GDD.md`.
 - **Before implementing a new feature or system:** Update `Docs/GDD.md` with the design first. Plan before you code.
 - After completing a feature, update the milestones table in GDD.md to reflect current status.
 - If a design decision changes during implementation, update the GDD to match.
+
+## Architecture Overview
+
+### Game Flow
+
+```
+Title → Choose App → Hire Team → Auto-Play (4 sprints) → End Screen → Retry
+```
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/app/page.tsx` | All UI screens (title, app select, hire, sprint overlay, end screen) |
+| `src/game/index.ts` | Game factory, tick loop, constants (salaries, app choices) |
+| `src/game/scoring.ts` | Pure scoring logic (progress, quality, revenue, grading) |
+| `src/game/types.ts` | TypeScript types derived from Zod schemas |
+| `src/lib/schemas.ts` | Zod schemas (source of truth for all data shapes) |
+| `src/game/character/developer.ts` | Worker class (role-based AI, movement, animation) |
+| `src/game/character/schedule.ts` | Role-based activity decisions |
+| `src/game/renderer.ts` | Three.js setup, camera controls |
+| `src/game/office.ts` | Voxel office layout and desk positions |
+| `src/components/GameCanvas.tsx` | 3D canvas with mouse/touch input handling |
+
+### Roles & Scoring
+
+| Role | Salary/Sprint | Effect |
+|------|--------------|--------|
+| Developer | $15,000 | +20% progress/sprint |
+| Designer | $12,000 | +0.15 quality (requires devs) |
+| Product Owner | $18,000 | +25% dev effectiveness |
+| Manager | $20,000 | 1st: +10% coordination. Each extra: -15% productivity |
 
 ## 3D Character & Animation Conventions
 
