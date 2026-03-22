@@ -59,7 +59,7 @@ export function createGame(canvas: HTMLCanvasElement, existingState?: GameState)
   const TICK_INTERVAL = 1 // 1 real second per tick
 
   // How far the chair slides out (in -Z) to let the character pass
-  const CHAIR_SLIDE_DIST = -1.2
+  const CHAIR_SLIDE_DIST = -0.6
 
   gameRenderer.onFrame((dt) => {
     // Animate characters every frame
