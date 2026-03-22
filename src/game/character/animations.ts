@@ -11,6 +11,9 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
     case 'idle':
       // Subtle breathing
       character.body.position.y = 1.0 + Math.sin(t * 0.5) * 0.01
+      character.head.position.y = 1.8
+      character.leftArm.position.y = 1.65
+      character.rightArm.position.y = 1.65
       character.leftArm.rotation.set(0, 0, 0)
       character.rightArm.rotation.set(0, 0, 0)
       character.leftLeg.rotation.x = 0
@@ -25,6 +28,9 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
       character.leftLeg.rotation.x = -Math.sin(t * 2) * 0.4
       character.rightLeg.rotation.x = Math.sin(t * 2) * 0.4
       character.body.position.y = 1.0 + Math.abs(Math.sin(t * 2)) * 0.05
+      character.head.position.y = 1.8
+      character.leftArm.position.y = 1.65
+      character.rightArm.position.y = 1.65
       character.head.rotation.set(0, 0, 0)
       break
 
@@ -35,6 +41,9 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
       character.leftLeg.rotation.x = Math.PI / 2
       character.rightLeg.rotation.x = Math.PI / 2
       character.body.position.y = 0.6
+      character.head.position.y = 1.4
+      character.leftArm.position.y = 1.25
+      character.rightArm.position.y = 1.25
       character.head.rotation.y = Math.sin(t * 0.2) * 0.05
       // Slight lean forward
       character.head.rotation.x = -0.1
@@ -49,6 +58,9 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
       character.leftLeg.rotation.x = 0
       character.rightLeg.rotation.x = 0
       character.body.position.y = 1.0
+      character.head.position.y = 1.8
+      character.leftArm.position.y = 1.65
+      character.rightArm.position.y = 1.65
       character.head.rotation.y = Math.sin(t * 0.8) * 0.15
       character.head.rotation.x = 0
       break
@@ -62,6 +74,9 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
       character.leftLeg.rotation.x = 0
       character.rightLeg.rotation.x = 0
       character.body.position.y = 1.0
+      character.head.position.y = 1.8
+      character.leftArm.position.y = 1.65
+      character.rightArm.position.y = 1.65
       character.head.rotation.x = -0.15
       character.head.rotation.y = 0
       break
@@ -73,6 +88,9 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
       character.leftLeg.rotation.x = Math.PI / 2
       character.rightLeg.rotation.x = Math.PI / 2
       character.body.position.y = 0.6
+      character.head.position.y = 1.4
+      character.leftArm.position.y = 1.25
+      character.rightArm.position.y = 1.25
       character.head.rotation.x = 0
       character.head.rotation.y = Math.sin(t * 0.3) * 0.1
       break
@@ -84,6 +102,9 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
       character.leftLeg.rotation.set(0, 0, 0)
       character.rightLeg.rotation.set(0, 0, 0)
       character.body.position.y = 1.0
+      character.head.position.y = 1.8
+      character.leftArm.position.y = 1.65
+      character.rightArm.position.y = 1.65
       character.head.rotation.set(0, 0, 0)
       break
   }
