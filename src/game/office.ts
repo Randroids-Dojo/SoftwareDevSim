@@ -47,10 +47,10 @@ function buildDesk(group: THREE.Group, x: number, z: number): THREE.Mesh {
 
   // Chair — scaled to character proportions
   box(group, [x + 1.1, 0, z - 0.8], [0.8, 1.2, 0.1], PALETTE.chair)
-  box(group, [x + 1.1, 0.5, z - 0.7], [0.8, 0.15, 0.5], PALETTE.chairSeat)
+  box(group, [x + 1.1, 0.35, z - 0.7], [0.8, 0.15, 0.5], PALETTE.chairSeat)
   // Front legs
-  box(group, [x + 1.1, 0, z - 0.3], [0.1, 0.5, 0.1], PALETTE.chair)
-  box(group, [x + 1.8, 0, z - 0.3], [0.1, 0.5, 0.1], PALETTE.chair)
+  box(group, [x + 1.1, 0, z - 0.3], [0.1, 0.35, 0.1], PALETTE.chair)
+  box(group, [x + 1.8, 0, z - 0.3], [0.1, 0.35, 0.1], PALETTE.chair)
 
   return screen
 }
