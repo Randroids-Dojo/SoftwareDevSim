@@ -44,8 +44,8 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
       // Gesticulating
       character.leftArm.rotation.x = 0.3 + Math.sin(t * 1.5) * 0.3
       character.rightArm.rotation.x = 0.3 + Math.sin(t * 1.5 + 2) * 0.3
-      character.leftArm.rotation.z = Math.sin(t * 1.2) * 0.2
-      character.rightArm.rotation.z = -Math.sin(t * 1.2 + 1) * 0.2
+      character.leftArm.rotation.z = -Math.sin(t * 1.2) * 0.2
+      character.rightArm.rotation.z = Math.sin(t * 1.2 + 1) * 0.2
       character.leftLeg.rotation.x = 0
       character.rightLeg.rotation.x = 0
       character.body.position.y = 1.0
@@ -56,7 +56,7 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
     case 'drink':
       // One arm raised to mouth
       character.rightArm.rotation.x = 1.2
-      character.rightArm.rotation.z = -0.3
+      character.rightArm.rotation.z = 0.3
       character.leftArm.rotation.x = 0
       character.leftArm.rotation.z = 0
       character.leftLeg.rotation.x = 0

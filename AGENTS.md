@@ -162,7 +162,10 @@ The character mesh (in `src/game/character/mesh.ts`) is built facing **-Z** (eye
 ### Coordinate rules
 
 - **Mesh forward = -Z (local).** The root group is rotated by `Math.PI` at runtime so characters face +Z in world space. Do not change the mesh construction to face a different axis.
-- **Leg/arm rotations are local.** A **positive** X rotation on a leg or arm moves it **forward** (toward the monitor/desk). A **negative** X rotation moves it **backward** (away from the desk). This is because the PI offset on root.rotation.y flips the world-space effect of local X rotations — the mesh was built facing -Z, so the "natural" negative-X-reaches-forward is reversed at runtime.
+- **Leg/arm rotations are local but flipped by the PI offset.** The PI rotation on root.rotation.y reverses both X-axis and Z-axis rotation effects:
+  - **rotation.x:** Positive = forward (toward desk), negative = backward (away from desk).
+  - **rotation.z:** Positive on the right arm = inward (toward body), negative = outward. Opposite for left arm.
+  - **rotation.y and head rotations** are unaffected (Y axis is unchanged by Y rotation).
 - **`seatDirection`** on `NamedLocation` defines the world-space direction the character should face when seated. The facing angle is computed as `atan2(dir.x, dir.z)` and the PI offset is added in `syncMeshPosition`.
 - **`facingAngle(from, to)`** returns the Y rotation for walking toward a target. The PI offset in `syncMeshPosition` handles the mesh-to-world conversion — do not add extra offsets in animation code.
 
