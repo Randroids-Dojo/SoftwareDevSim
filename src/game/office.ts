@@ -27,30 +27,38 @@ function buildWalls(group: THREE.Group) {
   box(group, [24, 0, 0], [0.5, 8, 16], PALETTE.wall)
 }
 
-function buildDesk(group: THREE.Group, x: number, z: number): THREE.Mesh {
+function buildDesk(
+  group: THREE.Group,
+  x: number,
+  z: number,
+): { screen: THREE.Mesh; chair: THREE.Group } {
   // Desktop surface
-  box(group, [x, 2.2, z], [3, 0.2, 2], PALETTE.deskTop)
+  box(group, [x, 0.9, z], [3, 0.15, 2], PALETTE.deskTop)
   // Legs
-  box(group, [x, 0, z], [0.2, 2.2, 0.2], PALETTE.deskLegs)
-  box(group, [x + 2.8, 0, z], [0.2, 2.2, 0.2], PALETTE.deskLegs)
-  box(group, [x, 0, z + 1.8], [0.2, 2.2, 0.2], PALETTE.deskLegs)
-  box(group, [x + 2.8, 0, z + 1.8], [0.2, 2.2, 0.2], PALETTE.deskLegs)
+  box(group, [x, 0, z], [0.2, 0.9, 0.2], PALETTE.deskLegs)
+  box(group, [x + 2.8, 0, z], [0.2, 0.9, 0.2], PALETTE.deskLegs)
+  box(group, [x, 0, z + 1.8], [0.2, 0.9, 0.2], PALETTE.deskLegs)
+  box(group, [x + 2.8, 0, z + 1.8], [0.2, 0.9, 0.2], PALETTE.deskLegs)
 
   // Monitor
-  box(group, [x + 0.8, 2.4, z + 1.2], [1.4, 1.0, 0.1], PALETTE.monitorFrame)
-  const screen = box(group, [x + 0.9, 2.5, z + 1.19], [1.2, 0.8, 0.1], PALETTE.monitorScreen)
+  box(group, [x + 0.8, 1.05, z + 1.2], [1.4, 1.0, 0.1], PALETTE.monitorFrame)
+  const screen = box(group, [x + 0.9, 1.15, z + 1.19], [1.2, 0.8, 0.1], PALETTE.monitorScreen)
   // Monitor stand
-  box(group, [x + 1.3, 2.4, z + 1.0], [0.4, 0.05, 0.4], PALETTE.monitorFrame)
+  box(group, [x + 1.3, 1.05, z + 1.0], [0.4, 0.05, 0.4], PALETTE.monitorFrame)
 
   // Keyboard
-  box(group, [x + 0.8, 2.42, z + 0.4], [1.2, 0.05, 0.4], PALETTE.keyboard)
+  box(group, [x + 0.8, 1.07, z + 0.4], [1.2, 0.05, 0.4], PALETTE.keyboard)
 
-  // Chair
-  box(group, [x + 0.8, 0, z - 0.8], [1.4, 1.5, 0.1], PALETTE.chair)
-  box(group, [x + 0.8, 1.5, z - 0.8], [1.4, 1.5, 0.1], PALETTE.chair)
-  box(group, [x + 0.8, 1.4, z - 0.7], [1.4, 0.15, 1.0], PALETTE.chairSeat)
+  // Chair — as a separate group so it can slide in/out
+  const chair = new THREE.Group()
+  box(chair, [x + 1.1, 0, z - 0.8], [0.8, 1.2, 0.1], PALETTE.chair)
+  box(chair, [x + 1.1, 0.35, z - 0.7], [0.8, 0.15, 0.5], PALETTE.chairSeat)
+  // Front legs
+  box(chair, [x + 1.1, 0, z - 0.3], [0.1, 0.35, 0.1], PALETTE.chair)
+  box(chair, [x + 1.8, 0, z - 0.3], [0.1, 0.35, 0.1], PALETTE.chair)
+  group.add(chair)
 
-  return screen
+  return { screen, chair }
 }
 
 function buildWhiteboard(group: THREE.Group) {
@@ -99,11 +107,13 @@ export interface OfficeScene {
   buildLight: THREE.Mesh
   locations: NamedLocation[]
   screenMeshes: THREE.Mesh[]
+  chairGroups: THREE.Group[]
 }
 
 export function createOffice(): OfficeScene {
   const group = new THREE.Group()
   const screenMeshes: THREE.Mesh[] = []
+  const chairGroups: THREE.Group[] = []
 
   buildFloor(group)
   buildWalls(group)
@@ -116,7 +126,9 @@ export function createOffice(): OfficeScene {
     [18, 0, 2], // desk_3
   ]
   for (const pos of deskPositions) {
-    screenMeshes.push(buildDesk(group, pos[0], pos[2]))
+    const { screen, chair } = buildDesk(group, pos[0], pos[2])
+    screenMeshes.push(screen)
+    chairGroups.push(chair)
   }
 
   buildWhiteboard(group)
@@ -129,14 +141,14 @@ export function createOffice(): OfficeScene {
   buildPlant(group, 23, 0.5)
 
   const locations: NamedLocation[] = [
-    { name: 'desk_0', position: [3.5, 0, 1], seatDirection: [0, 0, 1] },
-    { name: 'desk_1', position: [7.5, 0, 1], seatDirection: [0, 0, 1] },
-    { name: 'desk_2', position: [15.5, 0, 1], seatDirection: [0, 0, 1] },
-    { name: 'desk_3', position: [19.5, 0, 1], seatDirection: [0, 0, 1] },
+    { name: 'desk_0', position: [3.5, 0, 1.5], seatDirection: [0, 0, 1] },
+    { name: 'desk_1', position: [7.5, 0, 1.5], seatDirection: [0, 0, 1] },
+    { name: 'desk_2', position: [15.5, 0, 1.5], seatDirection: [0, 0, 1] },
+    { name: 'desk_3', position: [19.5, 0, 1.5], seatDirection: [0, 0, 1] },
     { name: 'coffee', position: [22, 0, 14] },
     { name: 'meeting', position: [3, 0, 13] },
     { name: 'whiteboard', position: [12, 0, 14] },
   ]
 
-  return { group, buildLight, locations, screenMeshes }
+  return { group, buildLight, locations, screenMeshes, chairGroups }
 }

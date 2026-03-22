@@ -2,12 +2,12 @@ import type { ActivityState, DeveloperState, GameClock, NamedLocation, Practices
 import { type CharacterMesh, createCharacterMesh } from './mesh'
 import { type AnimationName, applyAnimation } from './animations'
 import { transition } from './stateMachine'
-import { moveToward, findLocation } from './pathfinder'
+import { moveToward, findLocation, facingAngle } from './pathfinder'
 import { tickNeeds } from './needs'
 import { decideActivity, isStandupTime } from './schedule'
 
 const ACTIVITY_TO_ANIMATION: Record<ActivityState, AnimationName> = {
-  idle: 'idle',
+  idle: 'sit',
   moving: 'walk',
   working: 'type',
   pairing: 'type',
@@ -21,6 +21,7 @@ export class Developer {
 
   private targetLocation: string | null = null
   private animTime = 0
+  private facing = 0
 
   constructor(state: DeveloperState, colorIndex: number) {
     this.state = state
@@ -66,14 +67,21 @@ export class Developer {
 
     if (dist > 0.5) {
       this.state.currentActivity = transition(this.state.currentActivity, 'moving')
+      this.facing = facingAngle(this.state.position, targetLoc.position)
       const result = moveToward(this.state.position, targetLoc.position)
       this.state.position = result.position
 
       if (result.arrived) {
         this.state.currentActivity = transition('moving', desiredActivity)
+        if (targetLoc.seatDirection) {
+          this.facing = Math.atan2(targetLoc.seatDirection[0], targetLoc.seatDirection[2])
+        }
       }
     } else {
       this.state.currentActivity = transition(this.state.currentActivity, desiredActivity)
+      if (targetLoc.seatDirection) {
+        this.facing = Math.atan2(targetLoc.seatDirection[0], targetLoc.seatDirection[2])
+      }
     }
   }
 
@@ -91,6 +99,7 @@ export class Developer {
       this.state.position[1],
       this.state.position[2],
     )
+    this.mesh.root.rotation.y = this.facing + Math.PI
   }
 }
 
@@ -105,7 +114,7 @@ export function createInitialDevelopers(): DeveloperState[] {
       focus: 0.7,
       currentActivity: 'idle',
       assignedStoryId: null,
-      position: [3.5, 0, 1],
+      position: [3.5, 0, 1.5],
     },
     {
       id: 'dev-1',
@@ -116,7 +125,7 @@ export function createInitialDevelopers(): DeveloperState[] {
       focus: 0.8,
       currentActivity: 'idle',
       assignedStoryId: null,
-      position: [7.5, 0, 1],
+      position: [7.5, 0, 1.5],
     },
     {
       id: 'dev-2',
@@ -127,7 +136,7 @@ export function createInitialDevelopers(): DeveloperState[] {
       focus: 0.6,
       currentActivity: 'idle',
       assignedStoryId: null,
-      position: [15.5, 0, 1],
+      position: [15.5, 0, 1.5],
     },
   ]
 }

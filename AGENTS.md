@@ -155,6 +155,27 @@ The Game Design Document lives at `Docs/GDD.md`.
 - After completing a feature, update the milestones table in GDD.md to reflect current status.
 - If a design decision changes during implementation, update the GDD to match.
 
+## 3D Character & Animation Conventions
+
+The character mesh (in `src/game/character/mesh.ts`) is built facing **-Z** (eyes at z=-0.26). All animation rotations in `src/game/character/animations.ts` use **local space** relative to this orientation.
+
+### Coordinate rules
+
+- **Mesh forward = -Z (local).** The root group is rotated by `Math.PI` at runtime so characters face +Z in world space. Do not change the mesh construction to face a different axis.
+- **Leg/arm rotations are local but flipped by the PI offset.** The PI rotation on root.rotation.y reverses both X-axis and Z-axis rotation effects:
+  - **rotation.x:** Positive = forward (toward desk), negative = backward (away from desk).
+  - **rotation.z:** Positive on the right arm = inward (toward body), negative = outward. Opposite for left arm.
+  - **rotation.y and head rotations** are unaffected (Y axis is unchanged by Y rotation).
+- **`seatDirection`** on `NamedLocation` defines the world-space direction the character should face when seated. The facing angle is computed as `atan2(dir.x, dir.z)` and the PI offset is added in `syncMeshPosition`.
+- **`facingAngle(from, to)`** returns the Y rotation for walking toward a target. The PI offset in `syncMeshPosition` handles the mesh-to-world conversion — do not add extra offsets in animation code.
+
+### Checklist for animation changes
+
+1. Test sitting poses visually — legs must bend **toward** the desk, not away
+2. Arm rotations for typing must reach **toward** the keyboard (positive X rotation in local space)
+3. Walking leg swings should appear natural from the isometric camera angle
+4. After any rotation change, verify from multiple camera angles before committing
+
 ## Pre-Push Checklist
 
 Before pushing any branch, **always** run the full verification sequence and fix all errors:

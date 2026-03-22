@@ -58,10 +58,24 @@ export function createGame(canvas: HTMLCanvasElement, existingState?: GameState)
   let clockAccumulator = 0
   const TICK_INTERVAL = 1 // 1 real second per tick
 
+  // How far the chair slides out (in -Z) to let the character pass
+  const CHAIR_SLIDE_DIST = -0.6
+
   gameRenderer.onFrame((dt) => {
     // Animate characters every frame
     for (const dev of developers) {
       dev.animate(dt)
+    }
+
+    // Animate chairs: pull out when developer is moving to desk, push in when seated
+    for (let i = 0; i < developers.length; i++) {
+      const chair = gameRenderer.office.chairGroups[i]
+      if (!chair) continue
+      const activity = developers[i].state.currentActivity
+      // Chair should be pulled out when the dev is moving (approaching desk)
+      // and pushed back in when idle/working/pairing (seated at desk)
+      const targetZ = activity === 'moving' ? CHAIR_SLIDE_DIST : 0
+      chair.position.z += (targetZ - chair.position.z) * Math.min(1, dt * 5)
     }
 
     if (state.clock.paused) return
