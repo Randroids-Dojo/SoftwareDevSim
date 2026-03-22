@@ -288,7 +288,7 @@ function HireTeamScreen({
   )
 }
 
-// --- Sprint Overlay (during auto-play) ---
+// --- Sprint HUD (during auto-play) ---
 
 function SprintOverlay({
   snapshot,
@@ -298,44 +298,138 @@ function SprintOverlay({
     progress: number
     quality: number
     chosenApp: AppChoice | null
+    team: WorkerState[]
   }
 }) {
-  const { sprint, progress, chosenApp } = snapshot
+  const { sprint, progress, quality, chosenApp, team } = snapshot
   const sprintNum = sprint.current + 1
   const dayProgress = sprint.dayInSprint / sprint.daysPerSprint
 
+  // Team composition summary
+  const roleCounts = {
+    developer: team.filter((w) => w.role === 'developer').length,
+    designer: team.filter((w) => w.role === 'designer').length,
+    product_owner: team.filter((w) => w.role === 'product_owner').length,
+    manager: team.filter((w) => w.role === 'manager').length,
+  }
+
   return (
-    <div className="absolute top-0 left-0 right-0 z-10 pointer-events-none">
-      <div className="flex flex-col items-center pt-6">
-        <div className="bg-gray-900/80 rounded-lg px-6 py-3 backdrop-blur-sm">
-          <div className="text-white text-center mb-2">
-            <span className="text-lg font-bold">Sprint {sprintNum}</span>
-            <span className="text-gray-400 text-sm ml-2">of {sprint.total}</span>
-            {chosenApp && <span className="text-gray-500 text-sm ml-3">| {chosenApp.name}</span>}
-          </div>
+    <>
+      {/* Top HUD bar */}
+      <div className="absolute top-0 left-0 right-0 z-10 pointer-events-none">
+        <div className="bg-gray-900/90 border-b border-gray-700/50 backdrop-blur-sm px-4 py-3">
+          <div className="max-w-2xl mx-auto">
+            {/* App name + Sprint indicator row */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                {chosenApp && (
+                  <span className="text-blue-400 font-semibold text-sm">{chosenApp.name}</span>
+                )}
+                <span className="text-gray-600 text-sm">|</span>
+                <span className="text-white font-bold">Sprint {sprintNum}</span>
+                <span className="text-gray-500 text-sm">of {sprint.total}</span>
+              </div>
+              <div className="text-gray-400 text-sm">
+                Day {sprint.dayInSprint + 1} / {sprint.daysPerSprint}
+              </div>
+            </div>
 
-          {/* Sprint day progress */}
-          <div className="w-64 bg-gray-700 rounded-full h-2 mb-2">
-            <div
-              className="bg-blue-500 h-2 rounded-full transition-all duration-500"
-              style={{ width: `${dayProgress * 100}%` }}
-            />
-          </div>
+            {/* Sprint day progress bar */}
+            <div className="mb-3">
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <span>Sprint progress</span>
+                <span>{Math.round(dayProgress * 100)}%</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${dayProgress * 100}%` }}
+                />
+              </div>
+            </div>
 
-          {/* Overall app progress */}
-          <div className="flex justify-between text-xs text-gray-400 mb-1">
-            <span>App progress</span>
-            <span>{Math.round(progress * 100)}%</span>
-          </div>
-          <div className="w-64 bg-gray-700 rounded-full h-2">
-            <div
-              className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(100, progress * 100)}%` }}
-            />
+            {/* Overall app progress bar */}
+            <div className="mb-3">
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <span>App completion</span>
+                <span>{Math.round(progress * 100)}%</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-3">
+                <div
+                  className="bg-emerald-500 h-3 rounded-full transition-all duration-300"
+                  style={{ width: `${Math.min(100, progress * 100)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Bottom stats row */}
+            <div className="flex items-center justify-between text-xs">
+              {/* Team composition */}
+              <div className="flex items-center gap-3 text-gray-400">
+                {roleCounts.developer > 0 && (
+                  <span>
+                    <span className="text-blue-400">{roleCounts.developer}</span> Dev
+                    {roleCounts.developer !== 1 ? 's' : ''}
+                  </span>
+                )}
+                {roleCounts.designer > 0 && (
+                  <span>
+                    <span className="text-pink-400">{roleCounts.designer}</span> Designer
+                    {roleCounts.designer !== 1 ? 's' : ''}
+                  </span>
+                )}
+                {roleCounts.product_owner > 0 && (
+                  <span>
+                    <span className="text-amber-400">{roleCounts.product_owner}</span> PO
+                    {roleCounts.product_owner !== 1 ? 's' : ''}
+                  </span>
+                )}
+                {roleCounts.manager > 0 && (
+                  <span>
+                    <span className="text-gray-300">{roleCounts.manager}</span> Mgr
+                    {roleCounts.manager !== 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
+
+              {/* Quality indicator */}
+              <div className="text-gray-400">
+                Quality:{' '}
+                <span
+                  className={
+                    quality >= 0.6
+                      ? 'text-emerald-400'
+                      : quality >= 0.3
+                        ? 'text-yellow-400'
+                        : 'text-red-400'
+                  }
+                >
+                  {Math.round(quality * 100)}%
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Sprint milestone dots at bottom */}
+      <div className="absolute bottom-4 left-0 right-0 z-10 pointer-events-none">
+        <div className="flex justify-center gap-2">
+          {Array.from({ length: sprint.total }, (_, i) => (
+            <div
+              key={i}
+              className={`w-3 h-3 rounded-full border ${
+                i < sprint.current
+                  ? 'bg-emerald-500 border-emerald-400'
+                  : i === sprint.current
+                    ? 'bg-blue-500 border-blue-400 animate-pulse'
+                    : 'bg-gray-700 border-gray-600'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </>
   )
 }
 
