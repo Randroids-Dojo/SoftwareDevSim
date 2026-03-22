@@ -7,7 +7,7 @@ import { tickNeeds } from './needs'
 import { decideActivity, isStandupTime } from './schedule'
 
 const ACTIVITY_TO_ANIMATION: Record<ActivityState, AnimationName> = {
-  idle: 'idle',
+  idle: 'sit',
   moving: 'walk',
   working: 'type',
   pairing: 'type',

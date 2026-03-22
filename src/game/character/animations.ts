@@ -1,6 +1,6 @@
 import type { CharacterMesh } from './mesh'
 
-export type AnimationName = 'idle' | 'walk' | 'type' | 'talk' | 'drink' | 'stand'
+export type AnimationName = 'idle' | 'walk' | 'type' | 'talk' | 'drink' | 'stand' | 'sit'
 
 const SPEED = 3
 
@@ -64,6 +64,17 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
       character.body.position.y = 1.0
       character.head.rotation.x = -0.15
       character.head.rotation.y = 0
+      break
+
+    case 'sit':
+      // Seated idle — sitting in chair, not typing
+      character.leftArm.rotation.set(-0.3, 0, 0)
+      character.rightArm.rotation.set(-0.3, 0, 0)
+      character.leftLeg.rotation.x = -Math.PI / 2
+      character.rightLeg.rotation.x = -Math.PI / 2
+      character.body.position.y = 0.6
+      character.head.rotation.x = 0
+      character.head.rotation.y = Math.sin(t * 0.3) * 0.1
       break
 
     case 'stand':
