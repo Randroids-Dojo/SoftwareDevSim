@@ -338,7 +338,7 @@ function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActi
                       : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                   }`}
                 >
-                  {paused ? '▶ Resume' : '⏸ Pause'}
+                  {paused ? 'Resume' : 'Pause'}
                 </button>
               </div>
             </div>
