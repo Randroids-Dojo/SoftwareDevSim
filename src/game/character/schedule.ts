@@ -15,8 +15,8 @@ export type ScheduleDecision = {
 export function isStandupTime(clock: GameClock): boolean {
   // Morning standup — first 2 hours
   if (clock.hour >= 9 && clock.hour < 11) return true
-  // End-of-day standdown — last ~2.5 hours
-  if (clock.hour >= 16) return true
+  // End-of-day standdown — last ~2.5 hours (before 18:00 end of work)
+  if (clock.hour >= 16 && clock.hour < 18) return true
   if (clock.hour === 15 && clock.minute >= 30) return true
   return false
 }
