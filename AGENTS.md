@@ -211,6 +211,14 @@ npm run build
 
 `npm run build` runs the production Next.js build, which includes TypeScript compilation **and** ESLint. A Vercel deploy will fail on any error this catches, so never push without a clean build.
 
+## Game-Logic Guard Rails
+
+When writing or modifying time-based or range-based conditions in game logic:
+
+- **Always use bounded ranges.** A check like `hour >= 16` must include an upper bound (e.g. `hour >= 16 && hour < 18`). Open-ended ranges leak behavior into unintended periods (night, weekends, etc.).
+- **Test boundary values explicitly.** For any time/range condition, write tests for: inside the range, both edges, and clearly outside (e.g. hour 20 for a work-hours feature).
+- **Cross-check with `isWorkHours`.** Schedule activities that should only happen during work must be gated by work-hour boundaries, not just a start threshold.
+
 ## No Broken Windows
 
 If you encounter a broken or misconfigured tool, flaky script, stale dependency, or any other pre-existing issue **while working on a task**, fix it right then — do not skip it, work around it, or label it "pre-existing." Broken infrastructure left unfixed causes compounding failures. Treat every red signal as your responsibility, regardless of who introduced it.
