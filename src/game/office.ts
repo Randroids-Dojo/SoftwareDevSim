@@ -45,10 +45,9 @@ function buildDesk(group: THREE.Group, x: number, z: number): THREE.Mesh {
   // Keyboard
   box(group, [x + 0.8, 2.42, z + 0.4], [1.2, 0.05, 0.4], PALETTE.keyboard)
 
-  // Chair
-  box(group, [x + 0.8, 0, z - 0.8], [1.4, 1.5, 0.1], PALETTE.chair)
-  box(group, [x + 0.8, 1.5, z - 0.8], [1.4, 1.5, 0.1], PALETTE.chair)
-  box(group, [x + 0.8, 1.4, z - 0.7], [1.4, 0.15, 1.0], PALETTE.chairSeat)
+  // Chair — scaled to character proportions
+  box(group, [x + 0.8, 0, z - 0.8], [1.4, 1.2, 0.1], PALETTE.chair)
+  box(group, [x + 0.8, 0.5, z - 0.7], [1.4, 0.15, 1.0], PALETTE.chairSeat)
 
   return screen
 }
@@ -129,10 +128,10 @@ export function createOffice(): OfficeScene {
   buildPlant(group, 23, 0.5)
 
   const locations: NamedLocation[] = [
-    { name: 'desk_0', position: [3.5, 0, 1], seatDirection: [0, 0, 1] },
-    { name: 'desk_1', position: [7.5, 0, 1], seatDirection: [0, 0, 1] },
-    { name: 'desk_2', position: [15.5, 0, 1], seatDirection: [0, 0, 1] },
-    { name: 'desk_3', position: [19.5, 0, 1], seatDirection: [0, 0, 1] },
+    { name: 'desk_0', position: [3.5, 0, 1.8], seatDirection: [0, 0, 1] },
+    { name: 'desk_1', position: [7.5, 0, 1.8], seatDirection: [0, 0, 1] },
+    { name: 'desk_2', position: [15.5, 0, 1.8], seatDirection: [0, 0, 1] },
+    { name: 'desk_3', position: [19.5, 0, 1.8], seatDirection: [0, 0, 1] },
     { name: 'coffee', position: [22, 0, 14] },
     { name: 'meeting', position: [3, 0, 13] },
     { name: 'whiteboard', position: [12, 0, 14] },

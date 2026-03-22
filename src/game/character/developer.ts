@@ -105,7 +105,7 @@ export function createInitialDevelopers(): DeveloperState[] {
       focus: 0.7,
       currentActivity: 'idle',
       assignedStoryId: null,
-      position: [3.5, 0, 1],
+      position: [3.5, 0, 1.8],
     },
     {
       id: 'dev-1',
@@ -116,7 +116,7 @@ export function createInitialDevelopers(): DeveloperState[] {
       focus: 0.8,
       currentActivity: 'idle',
       assignedStoryId: null,
-      position: [7.5, 0, 1],
+      position: [7.5, 0, 1.8],
     },
     {
       id: 'dev-2',
@@ -127,7 +127,7 @@ export function createInitialDevelopers(): DeveloperState[] {
       focus: 0.6,
       currentActivity: 'idle',
       assignedStoryId: null,
-      position: [15.5, 0, 1],
+      position: [15.5, 0, 1.8],
     },
   ]
 }
