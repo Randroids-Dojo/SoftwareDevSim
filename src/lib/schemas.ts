@@ -2,31 +2,15 @@ import { z } from 'zod'
 
 // --- Enums ---
 
-export const DeveloperTraitSchema = z.enum(['architect', 'craftsman', 'hustler'])
+export const RoleSchema = z.enum(['developer', 'designer', 'product_owner', 'manager'])
 
-export const ActivityStateSchema = z.enum([
-  'idle',
-  'moving',
-  'working',
-  'pairing',
-  'meeting',
-  'break',
-])
+export const ActivityStateSchema = z.enum(['idle', 'moving', 'working', 'meeting', 'break'])
 
-export const StoryStatusSchema = z.enum(['backlog', 'todo', 'in_progress', 'review', 'done'])
+export const GamePhaseSchema = z.enum(['title', 'choose_app', 'hire_team', 'running', 'ended'])
 
-export const SprintPhaseSchema = z.enum(['planning', 'active', 'review', 'shipped'])
+export const GradeSchema = z.enum(['S', 'A', 'B', 'C', 'D', 'F'])
 
-export const CIStatusSchema = z.enum(['green', 'red', 'building'])
-
-export const PracticeKeySchema = z.enum([
-  'ci',
-  'codeReview',
-  'tdd',
-  'pairProgramming',
-  'sprintPlanning',
-  'refactoringBudget',
-])
+export const ComplexitySchema = z.enum(['simple', 'medium', 'complex'])
 
 // --- Value objects ---
 
@@ -34,51 +18,30 @@ export const Vec3Schema = z.tuple([z.number(), z.number(), z.number()])
 
 // --- Domain schemas ---
 
-export const DeveloperStateSchema = z.object({
+export const WorkerStateSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
-  trait: DeveloperTraitSchema,
-  morale: z.number().min(0).max(1),
+  role: RoleSchema,
+  salary: z.number().positive(),
   energy: z.number().min(0).max(1),
-  focus: z.number().min(0).max(1),
   currentActivity: ActivityStateSchema,
-  assignedStoryId: z.string().nullable(),
   position: Vec3Schema,
 })
 
-const VALID_POINTS = [1, 2, 3, 5, 8] as const
-
-export const UserStorySchema = z.object({
+export const AppChoiceSchema = z.object({
   id: z.string().min(1),
-  title: z.string().min(1),
-  points: z.number().refine((n) => VALID_POINTS.includes(n as (typeof VALID_POINTS)[number]), {
-    message: 'Story points must be 1, 2, 3, 5, or 8',
-  }),
-  status: StoryStatusSchema,
-  quality: z.number().min(0).max(1),
-  progress: z.number().min(0).max(1),
-  wasPlanned: z.boolean(),
-  hasTests: z.boolean(),
-  wasReviewed: z.boolean(),
-  wasRefactored: z.boolean(),
+  name: z.string().min(1),
+  description: z.string().min(1),
+  complexity: ComplexitySchema,
+  estimatedSprints: z.number().int().positive(),
+  revenuePotential: z.number().positive(),
 })
 
-export const SprintSchema = z.object({
-  number: z.number().int().min(1),
-  phase: SprintPhaseSchema,
+export const SprintStateSchema = z.object({
+  current: z.number().int().min(0),
+  total: z.literal(4),
   dayInSprint: z.number().int().min(0),
-  stories: z.array(z.string()),
-  hadPlanning: z.boolean(),
-  hadRetro: z.boolean(),
-})
-
-export const CodebaseSchema = z.object({
-  techDebt: z.number().min(0).max(1),
-  quality: z.number().min(0).max(1),
-  ciStatus: CIStatusSchema,
-  totalPointsShipped: z.number().int().min(0),
-  releasesShipped: z.number().int().min(0),
-  architecture: z.number().min(0).max(1),
+  daysPerSprint: z.literal(5),
 })
 
 export const GameClockSchema = z.object({
@@ -89,41 +52,25 @@ export const GameClockSchema = z.object({
   speed: z.number().positive(),
 })
 
-export const FeedbackEventSchema = z.object({
-  id: z.string().min(1),
-  sprint: z.number().int().min(1),
-  message: z.string().min(1),
-  type: z.enum(['positive', 'negative', 'neutral']),
-})
-
-export const PracticesSchema = z.object({
-  ci: z.boolean(),
-  codeReview: z.boolean(),
-  tdd: z.boolean(),
-  pairProgramming: z.boolean(),
-  sprintPlanning: z.boolean(),
-  refactoringBudget: z.boolean(),
+export const GameResultSchema = z.object({
+  grade: GradeSchema,
+  completion: z.number().min(0),
+  quality: z.number().min(0).max(1),
+  totalCost: z.number(),
+  revenue: z.number(),
+  roi: z.number(),
+  featuresShipped: z.string(),
 })
 
 export const GameStateSchema = z.object({
+  phase: GamePhaseSchema,
+  cash: z.number(),
+  chosenApp: AppChoiceSchema.nullable(),
+  team: z.array(WorkerStateSchema),
+  sprint: SprintStateSchema,
   clock: GameClockSchema,
-  developers: z.array(DeveloperStateSchema),
-  sprint: SprintSchema,
-  backlog: z.array(UserStorySchema),
-  codebase: CodebaseSchema,
-  feedback: z.array(FeedbackEventSchema),
-  practices: PracticesSchema,
+  progress: z.number().min(0).max(1),
+  quality: z.number().min(0).max(1),
+  result: GameResultSchema.nullable(),
   seed: z.string().min(1),
 })
-
-// --- Persistence ---
-
-export const GAME_STATE_VERSION = 1
-
-export const PersistedGameStateSchema = z.object({
-  version: z.literal(GAME_STATE_VERSION),
-  state: GameStateSchema,
-  savedAt: z.number().int().positive(),
-})
-
-export type PersistedGameState = z.infer<typeof PersistedGameStateSchema>

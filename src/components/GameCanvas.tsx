@@ -2,10 +2,8 @@
 
 import { useEffect, useRef } from 'react'
 import type { GameActions } from '../game'
-import type { GameState } from '../game/types'
 
 interface GameCanvasProps {
-  savedState: GameState | null
   onGameReady: (game: GameActions) => void
 }
 
@@ -34,17 +32,14 @@ const PAN_THRESHOLD = 8
 /** Radians per pixel of horizontal mouse drag for rotation */
 const ROTATE_SPEED = 0.005
 
-export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps) {
+export default function GameCanvas({ onGameReady }: GameCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const gameRef = useRef<GameActions | null>(null)
   const onGameReadyRef = useRef(onGameReady)
   onGameReadyRef.current = onGameReady
 
-  // Capture savedState at mount time so effect doesn't re-run
-  const savedStateRef = useRef(savedState)
-
-  // Touch gesture state (not React state — avoids re-renders)
+  // Touch gesture state
   const touchStateRef = useRef<{
     type: 'none' | 'pan' | 'pinch'
     lastX: number
@@ -59,7 +54,7 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
   const mouseStateRef = useRef<{
     isDown: boolean
     isPanning: boolean
-    button: number // 0 = left (pan), 2 = right (rotate)
+    button: number
     lastX: number
     lastY: number
     startX: number
@@ -75,12 +70,11 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
 
     import('../game').then(({ createGame }) => {
       if (cancelled) return
-      const game = createGame(canvas, savedStateRef.current ?? undefined)
+      const game = createGame(canvas)
       gameRef.current = game
       game.start()
       onGameReadyRef.current(game)
 
-      // Expose game instance for E2E testing
       if (typeof window !== 'undefined') {
         ;(window as unknown as Record<string, unknown>).__game = game
       }
@@ -129,7 +123,6 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
         const x = e.touches[0].clientX
         const y = e.touches[0].clientY
 
-        // Check threshold before entering pan mode
         if (state.type === 'none') {
           if (dist2D(x, y, state.startX, state.startY) > PAN_THRESHOLD) {
             state.type = 'pan'
@@ -152,18 +145,15 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
         const dist = getTouchDistance(e.touches)
         const angle = getTouchAngle(e.touches)
 
-        // Zoom by scale factor relative to previous frame
         if (state.lastDist > 0) {
           game.applyZoomScale(dist / state.lastDist)
         }
 
-        // Rotate by the angular change between fingers
         const dAngle = angle - state.lastAngle
         if (Math.abs(dAngle) < Math.PI) {
           game.applyRotationDelta(dAngle)
         }
 
-        // Also pan by midpoint movement so the pinch center stays fixed
         const dx = midX - state.lastX
         const dy = midY - state.lastY
         game.applyPanDeltaPixels(dx, dy)
@@ -179,7 +169,6 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
       e.preventDefault()
       const state = touchStateRef.current
       if (e.touches.length === 1) {
-        // Transition from pinch back to single-finger pan
         state.type = 'pan'
         state.lastX = e.touches[0].clientX
         state.lastY = e.touches[0].clientY
@@ -199,13 +188,12 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
     }
   }, [])
 
-  // Mouse drag and wheel — desktop pan/zoom
+  // Mouse drag and wheel
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
     function onMouseDown(e: MouseEvent): void {
-      // Left button (0) = pan, right button (2) = rotate
       if (e.button !== 0 && e.button !== 2) return
       mouseStateRef.current = {
         isDown: true,
@@ -228,12 +216,10 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
       const game = gameRef.current
       if (!game) return
 
-      // Check threshold before entering drag mode
       if (!state.isPanning) {
         if (dist2D(e.clientX, e.clientY, state.startX, state.startY) > PAN_THRESHOLD) {
           state.isPanning = true
           if (container) container.style.cursor = state.button === 2 ? 'ew-resize' : 'grabbing'
-          // Snap to current position so the first delta isn't huge
           state.lastX = e.clientX
           state.lastY = e.clientY
         }
@@ -244,10 +230,8 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
       const dy = e.clientY - state.lastY
 
       if (state.button === 2) {
-        // Right-click drag: rotate
         game.applyRotationDelta(dx * ROTATE_SPEED)
       } else {
-        // Left-click drag: pan
         game.applyPanDeltaPixels(dx, dy)
       }
 
@@ -265,7 +249,6 @@ export default function GameCanvas({ savedState, onGameReady }: GameCanvasProps)
       e.preventDefault()
       const game = gameRef.current
       if (!game) return
-      // Scroll up (deltaY < 0) → zoom in; scroll down → zoom out
       const factor = Math.pow(0.999, e.deltaY)
       game.applyZoomScale(factor)
     }

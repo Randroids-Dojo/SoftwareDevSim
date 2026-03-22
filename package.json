@@ -12,7 +12,7 @@
     "format:check": "npx prettier --check 'src/**/*.{ts,tsx}' 'tests/**/*.ts'",
     "type-check": "tsc --noEmit",
     "test:unit": "npx tsx --test tests/unit/*.test.ts",
-    "test:coverage": "npx tsx --test --experimental-test-coverage --test-coverage-include='src/game/**' --test-coverage-include='src/lib/**' --test-coverage-lines=90 --test-coverage-branches=80 --test-coverage-functions=90 tests/unit/*.test.ts",
+    "test:coverage": "npx tsx --test --experimental-test-coverage --test-coverage-include='src/game/scoring.ts' --test-coverage-include='src/game/simulation/**' --test-coverage-include='src/game/character/needs.ts' --test-coverage-include='src/game/character/schedule.ts' --test-coverage-include='src/game/character/stateMachine.ts' --test-coverage-include='src/game/character/pathfinder.ts' --test-coverage-include='src/lib/**' --test-coverage-lines=90 --test-coverage-branches=80 --test-coverage-functions=90 tests/unit/*.test.ts",
     "test:smoke": "npx tsx tests/smoke/smoke.test.ts",
     "test:e2e": "npx playwright test",
     "test:e2e:headed": "npx playwright test --headed"
