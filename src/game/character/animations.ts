@@ -32,8 +32,8 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
       // Seated typing - arms move quickly, small movements
       character.leftArm.rotation.x = -0.8 + Math.sin(t * 6) * 0.1
       character.rightArm.rotation.x = -0.8 + Math.sin(t * 6 + 1) * 0.1
-      character.leftLeg.rotation.x = -Math.PI / 2
-      character.rightLeg.rotation.x = -Math.PI / 2
+      character.leftLeg.rotation.x = Math.PI / 2
+      character.rightLeg.rotation.x = Math.PI / 2
       character.body.position.y = 0.6
       character.head.rotation.y = Math.sin(t * 0.2) * 0.05
       // Slight lean forward
@@ -70,8 +70,8 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
       // Seated idle — sitting in chair, not typing
       character.leftArm.rotation.set(-0.3, 0, 0)
       character.rightArm.rotation.set(-0.3, 0, 0)
-      character.leftLeg.rotation.x = -Math.PI / 2
-      character.rightLeg.rotation.x = -Math.PI / 2
+      character.leftLeg.rotation.x = Math.PI / 2
+      character.rightLeg.rotation.x = Math.PI / 2
       character.body.position.y = 0.6
       character.head.rotation.x = 0
       character.head.rotation.y = Math.sin(t * 0.3) * 0.1
