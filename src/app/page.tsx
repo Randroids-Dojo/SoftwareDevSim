@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react'
 import GameCanvas from '../components/GameCanvas'
+import FeedbackFab from '../components/FeedbackFab'
 import { useGameState } from '../hooks/useGameState'
 import type { GameActions } from '../game'
 import { APP_CHOICES, ROLE_SALARIES, ROLE_LABELS, STARTING_CASH, TOTAL_SPRINTS } from '../game'
@@ -433,7 +434,7 @@ function SprintOverlay({
         </div>
       </div>
 
-      {/* Paused overlay with feedback panel */}
+      {/* Paused overlay */}
       {paused && (
         <div className="absolute inset-0 z-20 pointer-events-none">
           {/* Dim overlay */}
@@ -445,54 +446,11 @@ function SprintOverlay({
               PAUSED
             </span>
           </div>
-
-          {/* Feedback FAB — bottom-right */}
-          <div className="absolute bottom-6 right-6 pointer-events-auto flex flex-col items-end gap-3">
-            <div className="bg-gray-800/95 border border-gray-700 rounded-xl p-4 backdrop-blur-sm w-72 shadow-lg">
-              <h3 className="text-white text-sm font-semibold mb-2">Sprint {sprintNum} Status</h3>
-              <div className="space-y-2 text-xs text-gray-400">
-                <div className="flex justify-between">
-                  <span>Progress</span>
-                  <span className="text-emerald-400">{Math.round(progress * 100)}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Quality</span>
-                  <span
-                    className={
-                      quality >= 0.6
-                        ? 'text-emerald-400'
-                        : quality >= 0.3
-                          ? 'text-yellow-400'
-                          : 'text-red-400'
-                    }
-                  >
-                    {Math.round(quality * 100)}%
-                  </span>
-                </div>
-                <hr className="border-gray-700" />
-                {team.map((w) => (
-                  <div key={w.id} className="flex justify-between">
-                    <span className="text-gray-300">{w.name}</span>
-                    <span className="capitalize text-gray-500">
-                      {w.currentActivity === 'working'
-                        ? 'coding'
-                        : w.currentActivity === 'meeting'
-                          ? 'in meeting'
-                          : w.currentActivity}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <button
-              onClick={togglePause}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-full text-sm font-medium shadow-lg transition-colors"
-            >
-              Resume
-            </button>
-          </div>
         </div>
       )}
+
+      {/* Feedback FAB — only visible when paused */}
+      {paused && <FeedbackFab />}
 
       {/* Sprint milestone dots at bottom */}
       <div className="absolute bottom-4 left-0 right-0 z-10 pointer-events-none">
