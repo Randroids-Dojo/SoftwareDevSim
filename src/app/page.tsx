@@ -6,7 +6,7 @@ import FeedbackFab from '../components/FeedbackFab'
 import { useGameState } from '../hooks/useGameState'
 import type { GameActions } from '../game'
 import { APP_CHOICES, ROLE_SALARIES, ROLE_LABELS, STARTING_CASH, TOTAL_SPRINTS } from '../game'
-import type { AppChoice, GameResult, Role, WorkerState } from '../game/types'
+import type { AppChoice, GameResult, GameState, Role, WorkerState } from '../game/types'
 
 // --- Name pools for hired workers ---
 const NAMES: Record<Role, string[]> = {
@@ -291,20 +291,7 @@ function HireTeamScreen({
 
 // --- Sprint HUD (during auto-play) ---
 
-function SprintOverlay({
-  snapshot,
-  game,
-}: {
-  snapshot: {
-    sprint: { current: number; total: number; dayInSprint: number; daysPerSprint: number }
-    clock: { paused: boolean }
-    progress: number
-    quality: number
-    chosenApp: AppChoice | null
-    team: WorkerState[]
-  }
-  game: GameActions
-}) {
+function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActions }) {
   const { sprint, progress, quality, chosenApp, team, clock } = snapshot
   const paused = clock.paused
   const sprintNum = sprint.current + 1
