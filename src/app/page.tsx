@@ -311,8 +311,8 @@ function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActi
 
   return (
     <>
-      {/* Top HUD bar */}
-      <div className="absolute top-0 left-0 right-0 z-10 pointer-events-none">
+      {/* Top HUD bar — z-30 so the button stays above the z-20 pause overlay */}
+      <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none">
         <div className="bg-gray-900/90 border-b border-gray-700/50 backdrop-blur-sm px-4 py-3">
           <div className="max-w-2xl mx-auto">
             {/* App name + Sprint indicator row */}
@@ -335,7 +335,7 @@ function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActi
                   className={`pointer-events-auto px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                     paused
                       ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                      : 'bg-yellow-600 hover:bg-yellow-500 text-white'
+                      : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                   }`}
                 >
                   {paused ? '▶ Resume' : '⏸ Pause'}
