@@ -50,4 +50,17 @@ test.describe('Intro screen and game start', () => {
     // Sprint panel auto-opens for new games
     await expect(page.getByText('Sprint Planning')).toBeVisible({ timeout: 5_000 })
   })
+
+  test('HUD prevents text selection for mobile touch', async ({ page }) => {
+    const startButton = page.getByRole('button', { name: 'Start Game' })
+    await expect(startButton).toBeVisible({ timeout: 15_000 })
+    await startButton.click()
+
+    // Wait for HUD to appear
+    await expect(page.getByText('Sprint 1', { exact: true })).toBeVisible({ timeout: 5_000 })
+
+    // The HUD container should have select-none to prevent accidental text selection on mobile
+    const hud = page.locator('.select-none').filter({ hasText: 'Sprint 1' })
+    await expect(hud).toBeVisible()
+  })
 })

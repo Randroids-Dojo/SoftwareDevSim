@@ -172,13 +172,15 @@ Zoom range: 0.5x (zoomed out) to 4x (zoomed in). Pan is clamped to keep the offi
 
 ### HUD (top bar)
 
-Sprint day, velocity, quality, morale, tech debt, CI status, points shipped
+Sprint day, velocity, quality, morale, tech debt, CI status, points shipped. Text is non-selectable (`select-none`) to prevent accidental text selection during mobile touch interactions.
 
 ### Menu Bar (bottom)
 
-Sprint | Team | Backlog | Practices | Ship + speed controls (pause, 1x, 2x, 5x)
+Sprint | Team | Backlog | Practices | Ship + speed controls (pause, 1x, 2x, 5x). Respects mobile safe-area insets for devices with gesture bars.
 
 ### Panels (slide up from bottom)
+
+Each panel header has a collapse chevron (▾) that collapses the panel back to the menu bar. Clicking a different menu tab also switches panels.
 
 - **SprintPanel:** Pick stories for sprint, start with/without planning
 - **TeamPanel:** Assign stories to devs, view dev stats

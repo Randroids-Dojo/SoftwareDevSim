@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-test.describe('Panel toggling and close buttons', () => {
+test.describe('Panel toggling and collapse buttons', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
     await page.evaluate(() => localStorage.clear())
@@ -42,23 +42,23 @@ test.describe('Panel toggling and close buttons', () => {
     await expect(page.locator('h3', { hasText: 'Team' })).not.toBeVisible()
   })
 
-  test('Backlog panel opens and closes via close button', async ({ page }) => {
+  test('Backlog panel opens and collapses via collapse button', async ({ page }) => {
     // Open Backlog panel
     await page.getByRole('button', { name: 'Backlog' }).click()
     await expect(page.locator('h3', { hasText: 'Backlog' })).toBeVisible()
 
-    // Close via the × button
-    await page.getByRole('button', { name: 'Close' }).click()
+    // Collapse via the ▾ button
+    await page.getByRole('button', { name: 'Collapse' }).click()
     await expect(page.locator('h3', { hasText: 'Backlog' })).not.toBeVisible()
   })
 
-  test('Practices panel opens and closes via close button', async ({ page }) => {
+  test('Practices panel opens and collapses via collapse button', async ({ page }) => {
     // Open Practices panel
     await page.getByRole('button', { name: 'Practices' }).click()
     await expect(page.locator('h3', { hasText: 'Engineering Practices' })).toBeVisible()
 
-    // Close via the × button
-    await page.getByRole('button', { name: 'Close' }).click()
+    // Collapse via the ▾ button
+    await page.getByRole('button', { name: 'Collapse' }).click()
     await expect(page.locator('h3', { hasText: 'Engineering Practices' })).not.toBeVisible()
   })
 
