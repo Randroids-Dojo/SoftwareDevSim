@@ -209,7 +209,7 @@ function HireTeamScreen({
     game.state.cash = cash - totalCost
     game.state.phase = 'running'
     game.state.clock.paused = false
-    game.state.clock.speed = 20
+    game.state.clock.speed = 1
 
     game.spawnWorkers(workers)
   }
@@ -291,6 +291,8 @@ function HireTeamScreen({
 
 // --- Sprint HUD (during auto-play) ---
 
+const SPEED_OPTIONS = [1, 2, 10, 20] as const
+
 function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActions }) {
   const { sprint, progress, quality, chosenApp, team, clock } = snapshot
   const paused = clock.paused
@@ -307,6 +309,10 @@ function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActi
 
   const togglePause = () => {
     game.state.clock.paused = !game.state.clock.paused
+  }
+
+  const setSpeed = (speed: number) => {
+    game.state.clock.speed = speed
   }
 
   return (
@@ -329,6 +335,22 @@ function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActi
                 <span className="text-gray-400 text-sm">
                   Day {sprint.dayInSprint + 1} / {sprint.daysPerSprint}
                 </span>
+                {/* Speed controls */}
+                <div className="flex items-center pointer-events-auto">
+                  {SPEED_OPTIONS.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setSpeed(s)}
+                      className={`px-2.5 py-1.5 text-xs font-semibold transition-colors first:rounded-l-md last:rounded-r-md border-r border-gray-600 last:border-r-0 ${
+                        clock.speed === s
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-700 hover:bg-gray-600 text-gray-400'
+                      }`}
+                    >
+                      {s}x
+                    </button>
+                  ))}
+                </div>
                 {/* Pause / Resume button */}
                 <button
                   onClick={togglePause}
