@@ -30,8 +30,8 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
 
     case 'type':
       // Seated typing - arms move quickly, small movements
-      character.leftArm.rotation.x = -0.8 + Math.sin(t * 6) * 0.1
-      character.rightArm.rotation.x = -0.8 + Math.sin(t * 6 + 1) * 0.1
+      character.leftArm.rotation.x = 0.8 + Math.sin(t * 6) * 0.1
+      character.rightArm.rotation.x = 0.8 + Math.sin(t * 6 + 1) * 0.1
       character.leftLeg.rotation.x = Math.PI / 2
       character.rightLeg.rotation.x = Math.PI / 2
       character.body.position.y = 0.6
@@ -42,8 +42,8 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
 
     case 'talk':
       // Gesticulating
-      character.leftArm.rotation.x = -0.3 + Math.sin(t * 1.5) * 0.3
-      character.rightArm.rotation.x = -0.3 + Math.sin(t * 1.5 + 2) * 0.3
+      character.leftArm.rotation.x = 0.3 + Math.sin(t * 1.5) * 0.3
+      character.rightArm.rotation.x = 0.3 + Math.sin(t * 1.5 + 2) * 0.3
       character.leftArm.rotation.z = Math.sin(t * 1.2) * 0.2
       character.rightArm.rotation.z = -Math.sin(t * 1.2 + 1) * 0.2
       character.leftLeg.rotation.x = 0
@@ -55,7 +55,7 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
 
     case 'drink':
       // One arm raised to mouth
-      character.rightArm.rotation.x = -1.2
+      character.rightArm.rotation.x = 1.2
       character.rightArm.rotation.z = -0.3
       character.leftArm.rotation.x = 0
       character.leftArm.rotation.z = 0
@@ -68,8 +68,8 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
 
     case 'sit':
       // Seated idle — sitting in chair, not typing
-      character.leftArm.rotation.set(-0.3, 0, 0)
-      character.rightArm.rotation.set(-0.3, 0, 0)
+      character.leftArm.rotation.set(0.3, 0, 0)
+      character.rightArm.rotation.set(0.3, 0, 0)
       character.leftLeg.rotation.x = Math.PI / 2
       character.rightLeg.rotation.x = Math.PI / 2
       character.body.position.y = 0.6
