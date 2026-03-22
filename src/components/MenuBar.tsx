@@ -31,12 +31,12 @@ function MenuButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`relative px-4 py-2 text-sm font-medium rounded-t transition-colors ${
+      className={`relative px-4 py-2 text-sm font-medium rounded transition-colors ${
         active
-          ? 'bg-gray-800 text-white border-t border-x border-gray-600'
+          ? 'bg-gray-700 text-white'
           : pulse
-            ? 'bg-blue-900/80 text-blue-200 hover:bg-blue-800/80 animate-pulse border-t border-x border-blue-500/50'
-            : 'bg-gray-900/60 text-gray-400 hover:text-white hover:bg-gray-800/60'
+            ? 'bg-blue-900/80 text-blue-200 hover:bg-blue-800/80 animate-pulse'
+            : 'text-gray-400 hover:text-white hover:bg-gray-700/60'
       } ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
     >
       {label}
@@ -59,9 +59,9 @@ export default function MenuBar({ snapshot, game, activePanel, setActivePanel }:
   const isShippable = snapshot.sprint.phase === 'review' || snapshot.sprint.phase === 'active'
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 z-10">
+    <div className="absolute bottom-0 left-0 right-0 z-10 bg-gray-900/80 backdrop-blur-sm border-t border-gray-700">
       <div
-        className="flex items-end justify-center gap-1 px-4 pb-2"
+        className="flex items-center justify-center gap-1 px-4 py-2"
         style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0.5rem))' }}
       >
         <MenuButton
@@ -91,7 +91,7 @@ export default function MenuBar({ snapshot, game, activePanel, setActivePanel }:
         />
 
         {/* Speed controls */}
-        <div className="ml-4 flex items-center gap-1 pb-2">
+        <div className="ml-4 flex items-center gap-1">
           <button
             onClick={() => game.setPaused(!snapshot.clock.paused)}
             className={`px-3 py-1 text-xs rounded ${snapshot.clock.paused ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-300'}`}
