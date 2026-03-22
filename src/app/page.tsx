@@ -74,7 +74,7 @@ export default function Home() {
       {phase === 'hire_team' && game && snapshot && (
         <HireTeamScreen game={game} cash={snapshot.cash} chosenApp={snapshot.chosenApp} />
       )}
-      {phase === 'running' && snapshot && <SprintOverlay snapshot={snapshot} />}
+      {phase === 'running' && snapshot && game && <SprintOverlay snapshot={snapshot} game={game} />}
       {phase === 'ended' && snapshot?.result && game && (
         <EndScreen result={snapshot.result} game={game} />
       )}
@@ -292,16 +292,20 @@ function HireTeamScreen({
 
 function SprintOverlay({
   snapshot,
+  game,
 }: {
   snapshot: {
     sprint: { current: number; total: number; dayInSprint: number; daysPerSprint: number }
+    clock: { paused: boolean }
     progress: number
     quality: number
     chosenApp: AppChoice | null
     team: WorkerState[]
   }
+  game: GameActions
 }) {
-  const { sprint, progress, quality, chosenApp, team } = snapshot
+  const { sprint, progress, quality, chosenApp, team, clock } = snapshot
+  const paused = clock.paused
   const sprintNum = sprint.current + 1
   const dayProgress = sprint.dayInSprint / sprint.daysPerSprint
 
@@ -311,6 +315,10 @@ function SprintOverlay({
     designer: team.filter((w) => w.role === 'designer').length,
     product_owner: team.filter((w) => w.role === 'product_owner').length,
     manager: team.filter((w) => w.role === 'manager').length,
+  }
+
+  const togglePause = () => {
+    game.state.clock.paused = !game.state.clock.paused
   }
 
   return (
@@ -329,8 +337,17 @@ function SprintOverlay({
                 <span className="text-white font-bold">Sprint {sprintNum}</span>
                 <span className="text-gray-500 text-sm">of {sprint.total}</span>
               </div>
-              <div className="text-gray-400 text-sm">
-                Day {sprint.dayInSprint + 1} / {sprint.daysPerSprint}
+              <div className="flex items-center gap-3">
+                <span className="text-gray-400 text-sm">
+                  Day {sprint.dayInSprint + 1} / {sprint.daysPerSprint}
+                </span>
+                {/* Pause / Resume button */}
+                <button
+                  onClick={togglePause}
+                  className="pointer-events-auto px-3 py-1 rounded text-xs font-medium transition-colors bg-gray-700 hover:bg-gray-600 text-white"
+                >
+                  {paused ? 'Resume' : 'Pause'}
+                </button>
               </div>
             </div>
 
@@ -411,6 +428,67 @@ function SprintOverlay({
           </div>
         </div>
       </div>
+
+      {/* Paused overlay with feedback panel */}
+      {paused && (
+        <div className="absolute inset-0 z-10 pointer-events-none">
+          {/* Dim overlay */}
+          <div className="absolute inset-0 bg-black/40" />
+
+          {/* PAUSED badge */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            <span className="text-white/60 text-4xl font-bold tracking-widest select-none">
+              PAUSED
+            </span>
+          </div>
+
+          {/* Feedback FAB — bottom-right */}
+          <div className="absolute bottom-6 right-6 pointer-events-auto flex flex-col items-end gap-3">
+            <div className="bg-gray-800/95 border border-gray-700 rounded-xl p-4 backdrop-blur-sm w-72 shadow-lg">
+              <h3 className="text-white text-sm font-semibold mb-2">Sprint {sprintNum} Status</h3>
+              <div className="space-y-2 text-xs text-gray-400">
+                <div className="flex justify-between">
+                  <span>Progress</span>
+                  <span className="text-emerald-400">{Math.round(progress * 100)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Quality</span>
+                  <span
+                    className={
+                      quality >= 0.6
+                        ? 'text-emerald-400'
+                        : quality >= 0.3
+                          ? 'text-yellow-400'
+                          : 'text-red-400'
+                    }
+                  >
+                    {Math.round(quality * 100)}%
+                  </span>
+                </div>
+                <hr className="border-gray-700" />
+                {team.map((w) => (
+                  <div key={w.id} className="flex justify-between">
+                    <span className="text-gray-300">{w.name}</span>
+                    <span className="capitalize text-gray-500">
+                      {w.currentActivity === 'working'
+                        ? 'coding'
+                        : w.currentActivity === 'meeting'
+                          ? 'in meeting'
+                          : w.currentActivity}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <button
+              onClick={togglePause}
+              className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-full text-sm font-medium shadow-lg transition-colors"
+            >
+              Resume
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Sprint milestone dots at bottom */}
       <div className="absolute bottom-4 left-0 right-0 z-10 pointer-events-none">
