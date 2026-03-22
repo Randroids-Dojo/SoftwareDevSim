@@ -1,57 +1,56 @@
-import type { DeveloperState, GameClock, Practices } from '../types'
-import { needsBreak } from './needs'
+import type { Role, WorkerState, GameClock } from '../types'
 
 export type ScheduleDecision = {
-  activity: 'break' | 'meeting' | 'working' | 'pairing' | 'idle'
+  activity: 'break' | 'meeting' | 'working' | 'idle'
   targetLocation: string
 }
 
-/** Decide what a developer should do this tick based on schedule and needs. */
-export function decideActivity(
-  dev: DeveloperState,
-  clock: GameClock,
-  practices: Practices,
-  isStandupTime: boolean,
-  pairPartnerId: string | null,
-): ScheduleDecision {
-  // Critical energy → take a break
-  if (needsBreak(dev)) {
+/** Assign desk names by worker index. Only 4 desks available. */
+function getDeskForWorker(workerId: string): string {
+  const idx = parseInt(workerId.split('-')[1] ?? '0', 10)
+  if (idx < 4) return `desk_${idx}`
+  // Overflow workers stand near whiteboard
+  return 'whiteboard'
+}
+
+/** Role-based behavior during work hours. */
+function workBehavior(worker: WorkerState, clock: GameClock): ScheduleDecision {
+  const desk = getDeskForWorker(worker.id)
+
+  // Low energy → coffee break
+  if (worker.energy < 0.2) {
     return { activity: 'break', targetLocation: 'coffee' }
   }
 
-  // 9am standup
-  if (isStandupTime) {
-    return { activity: 'meeting', targetLocation: 'meeting' }
-  }
-
-  // Outside work hours → idle at own desk
+  // Outside work hours → idle at desk
   if (clock.hour < 9 || clock.hour >= 18) {
-    return { activity: 'idle', targetLocation: getDeskForDev(dev.id) }
+    return { activity: 'idle', targetLocation: desk }
   }
 
-  // Has assigned story → work on it
-  if (dev.assignedStoryId) {
-    if (practices.pairProgramming && pairPartnerId) {
-      return { activity: 'pairing', targetLocation: getDeskForDev(dev.id) }
-    }
-    return { activity: 'working', targetLocation: getDeskForDev(dev.id) }
+  const role: Role = worker.role
+
+  switch (role) {
+    case 'developer':
+    case 'designer':
+      return { activity: 'working', targetLocation: desk }
+
+    case 'product_owner':
+      // POs alternate between whiteboard and checking on devs
+      if (clock.minute < 30) {
+        return { activity: 'meeting', targetLocation: 'whiteboard' }
+      }
+      return { activity: 'working', targetLocation: desk }
+
+    case 'manager':
+      // Managers spend most of their time in meetings
+      if (clock.minute < 45) {
+        return { activity: 'meeting', targetLocation: 'meeting' }
+      }
+      return { activity: 'break', targetLocation: 'coffee' }
   }
-
-  // Nothing to do
-  return { activity: 'idle', targetLocation: getDeskForDev(dev.id) }
 }
 
-const DESK_ASSIGNMENTS: Record<string, string> = {
-  'dev-0': 'desk_0',
-  'dev-1': 'desk_1',
-  'dev-2': 'desk_2',
-}
-
-export function getDeskForDev(devId: string): string {
-  return DESK_ASSIGNMENTS[devId] ?? 'desk_0'
-}
-
-export function isStandupTime(clock: GameClock): boolean {
-  // Wide window so high-speed ticks can't skip it entirely
-  return clock.hour === 9 && clock.minute < 30
+/** Decide what a worker should do this tick. */
+export function decideActivity(worker: WorkerState, clock: GameClock): ScheduleDecision {
+  return workBehavior(worker, clock)
 }

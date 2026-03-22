@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-type View = 'closed' | 'menu' | 'feedback'
 type SubmitState = 'idle' | 'sending' | 'success' | 'error'
 
 function captureScreenshot(): string | null {
@@ -29,28 +28,22 @@ function captureScreenshot(): string | null {
 }
 
 export default function FeedbackFab() {
-  const [view, setView] = useState<View>('closed')
+  const [open, setOpen] = useState(false)
   const [submitState, setSubmitState] = useState<SubmitState>('idle')
   const [message, setMessage] = useState('')
   const fabRef = useRef<HTMLButtonElement>(null)
-  const menuRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   // Close on Escape or click-outside
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape' && view !== 'closed') setView('closed')
+      if (e.key === 'Escape' && open) setOpen(false)
     }
     function onClickOutside(e: MouseEvent) {
       const t = e.target as Node
-      if (
-        view !== 'closed' &&
-        !fabRef.current?.contains(t) &&
-        !menuRef.current?.contains(t) &&
-        !panelRef.current?.contains(t)
-      ) {
-        setView('closed')
+      if (open && !fabRef.current?.contains(t) && !panelRef.current?.contains(t)) {
+        setOpen(false)
       }
     }
     document.addEventListener('keydown', onKey)
@@ -59,15 +52,13 @@ export default function FeedbackFab() {
       document.removeEventListener('keydown', onKey)
       document.removeEventListener('click', onClickOutside)
     }
-  }, [view])
+  }, [open])
 
   function toggle() {
-    setView((v) => (v === 'closed' ? 'menu' : 'closed'))
-  }
-
-  function openFeedback() {
-    setView('feedback')
-    setTimeout(() => textareaRef.current?.focus(), 50)
+    setOpen((v) => {
+      if (!v) setTimeout(() => textareaRef.current?.focus(), 50)
+      return !v
+    })
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -97,7 +88,7 @@ export default function FeedbackFab() {
       setSubmitState('success')
       setMessage('')
       setTimeout(() => {
-        setView('closed')
+        setOpen(false)
         setTimeout(() => setSubmitState('idle'), 350)
       }, 2000)
     } catch {
@@ -106,16 +97,14 @@ export default function FeedbackFab() {
     }
   }
 
-  const isOpen = view !== 'closed'
-
   return (
     <>
       {/* FAB */}
       <button
         ref={fabRef}
         onClick={toggle}
-        aria-label="Open menu"
-        className={`sds-fab${isOpen ? ' open' : ''}`}
+        aria-label="Send feedback"
+        className={`sds-fab${open ? ' open' : ''}`}
       >
         {/* Chat bubble icon */}
         <svg
@@ -143,25 +132,8 @@ export default function FeedbackFab() {
         </svg>
       </button>
 
-      {/* Menu */}
-      <div ref={menuRef} className={`sds-fab-menu${view === 'menu' ? ' open' : ''}`}>
-        <button className="sds-fab-menu-item" onClick={openFeedback}>
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          </svg>
-          Feedback
-        </button>
-      </div>
-
-      {/* Feedback panel */}
-      <div ref={panelRef} className={`sds-feedback-panel${view === 'feedback' ? ' open' : ''}`}>
+      {/* Feedback panel — opens directly, no menu step */}
+      <div ref={panelRef} className={`sds-feedback-panel${open ? ' open' : ''}`}>
         <div className="sds-feedback-header">
           <span>{'// send feedback'}</span>
         </div>

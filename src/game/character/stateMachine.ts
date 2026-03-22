@@ -14,19 +14,18 @@ const VALID_TRANSITIONS: FSMTransition[] = [
   { from: 'moving', to: 'working' },
   { from: 'moving', to: 'break' },
   { from: 'moving', to: 'meeting' },
-  { from: 'moving', to: 'pairing' },
   { from: 'working', to: 'idle' },
   { from: 'working', to: 'moving' },
   { from: 'working', to: 'break' },
   { from: 'working', to: 'meeting' },
-  { from: 'pairing', to: 'idle' },
-  { from: 'pairing', to: 'moving' },
-  { from: 'pairing', to: 'break' },
-  { from: 'pairing', to: 'meeting' },
   { from: 'meeting', to: 'idle' },
   { from: 'meeting', to: 'moving' },
+  { from: 'meeting', to: 'working' },
+  { from: 'meeting', to: 'break' },
   { from: 'break', to: 'idle' },
   { from: 'break', to: 'moving' },
+  { from: 'break', to: 'working' },
+  { from: 'break', to: 'meeting' },
 ]
 
 function canTransition(from: ActivityState, to: ActivityState): boolean {

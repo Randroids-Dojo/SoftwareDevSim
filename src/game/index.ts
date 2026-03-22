@@ -1,84 +1,126 @@
 import { createRenderer } from './renderer'
-import { Developer, createInitialDevelopers } from './character/developer'
+import { Developer } from './character/developer'
 import { createClock, tickClock } from './simulation/clock'
-import {
-  createSprint,
-  startSprint,
-  advanceDay,
-  shipSprint,
-  tickStoryProgress,
-  tickReview,
-  sprintVelocity,
-} from './simulation/sprint'
-import { generateBacklog } from './simulation/backlog'
-import { createCodebase, shipRelease } from './simulation/codebase'
-import { generateFeedback } from './simulation/feedback'
-import { createRng } from '../lib/seededRng'
-import type { GameState, GameInstance, Practices } from './types'
+import { calculateSprintProgress, calculateQuality, calculateResult } from './scoring'
+import type { AppChoice, GameInstance, GameState, WorkerState } from './types'
+
+// --- Constants ---
+
+export const STARTING_CASH = 500_000
+export const TOTAL_SPRINTS = 4
+export const DAYS_PER_SPRINT = 5
+
+/** Salary per sprint for each role. */
+export const ROLE_SALARIES: Record<string, number> = {
+  developer: 15_000,
+  designer: 12_000,
+  product_owner: 18_000,
+  manager: 20_000,
+}
+
+/** Role display labels. */
+export const ROLE_LABELS: Record<string, string> = {
+  developer: 'Developer',
+  designer: 'Designer',
+  product_owner: 'Product Owner',
+  manager: 'Manager',
+}
+
+export const APP_CHOICES: AppChoice[] = [
+  {
+    id: 'todo',
+    name: 'Todo App',
+    description: 'A simple task management app. Low risk, low reward.',
+    complexity: 'simple',
+    estimatedSprints: 2,
+    revenuePotential: 120_000,
+  },
+  {
+    id: 'fitness',
+    name: 'Fitness Tracker',
+    description: 'A workout and health tracking app. Moderate complexity.',
+    complexity: 'medium',
+    estimatedSprints: 4,
+    revenuePotential: 350_000,
+  },
+  {
+    id: 'ecommerce',
+    name: 'E-Commerce Platform',
+    description: 'A full online store with payments. High complexity, high reward.',
+    complexity: 'complex',
+    estimatedSprints: 6,
+    revenuePotential: 750_000,
+  },
+]
+
+// Re-export scoring functions for convenience
+export {
+  calculateSprintProgress,
+  calculateQuality,
+  calculateTotalCost,
+  calculateCompletion,
+  calculateRevenue,
+  calculateGrade,
+  calculateResult,
+} from './scoring'
+
+// --- Initial state ---
 
 function createInitialState(seed: string): GameState {
-  const rng = createRng(seed)
   return {
-    clock: createClock(),
-    developers: createInitialDevelopers(),
-    sprint: createSprint(1),
-    backlog: generateBacklog(rng),
-    codebase: createCodebase(),
-    feedback: [],
-    practices: {
-      ci: false,
-      codeReview: false,
-      tdd: false,
-      pairProgramming: false,
-      sprintPlanning: false,
-      refactoringBudget: false,
+    phase: 'title',
+    cash: STARTING_CASH,
+    chosenApp: null,
+    team: [],
+    sprint: {
+      current: 0,
+      total: 4,
+      dayInSprint: 0,
+      daysPerSprint: 5,
     },
+    clock: createClock(),
+    progress: 0,
+    quality: 0,
+    result: null,
     seed,
   }
 }
 
-export function createGame(canvas: HTMLCanvasElement, existingState?: GameState): GameInstance {
-  const seed = existingState?.seed ?? `game-${Date.now()}`
-  const state: GameState = existingState ?? createInitialState(seed)
+// --- Game factory ---
+
+export function createGame(canvas: HTMLCanvasElement): GameInstance {
+  const seed = `game-${Date.now()}`
+  const state: GameState = createInitialState(seed)
 
   const gameRenderer = createRenderer(canvas)
-  const developers: Developer[] = []
-
-  // Create developer visuals
-  for (let i = 0; i < state.developers.length; i++) {
-    const dev = new Developer(state.developers[i], i)
-    developers.push(dev)
-    gameRenderer.addToScene(dev.mesh.root)
-  }
+  let workers: Developer[] = []
 
   // Screen glow (AI-assisted coding is always on)
   gameRenderer.setScreenGlow(true)
-  gameRenderer.setBuildLight(state.codebase.ciStatus)
+  gameRenderer.setBuildLight('green')
 
   let clockAccumulator = 0
   const TICK_INTERVAL = 1 // 1 real second per tick
 
-  // How far the chair slides out (in -Z) to let the character pass
+  // How far the chair slides out to let the character pass
   const CHAIR_SLIDE_DIST = -0.6
 
   gameRenderer.onFrame((dt) => {
     // Animate characters every frame
-    for (const dev of developers) {
-      dev.animate(dt)
+    for (const worker of workers) {
+      worker.animate(dt)
     }
 
-    // Animate chairs: pull out when developer is moving to desk, push in when seated
-    for (let i = 0; i < developers.length; i++) {
+    // Animate chairs
+    for (let i = 0; i < workers.length && i < gameRenderer.office.chairGroups.length; i++) {
       const chair = gameRenderer.office.chairGroups[i]
       if (!chair) continue
-      const activity = developers[i].state.currentActivity
-      // Chair should be pulled out when the dev is moving (approaching desk)
-      // and pushed back in when idle/working/pairing (seated at desk)
+      const activity = workers[i].state.currentActivity
       const targetZ = activity === 'moving' ? CHAIR_SLIDE_DIST : 0
       chair.position.z += (targetZ - chair.position.z) * Math.min(1, dt * 5)
     }
 
-    if (state.clock.paused) return
+    if (state.clock.paused || state.phase !== 'running') return
 
     clockAccumulator += dt
     while (clockAccumulator >= TICK_INTERVAL) {
@@ -94,67 +136,45 @@ export function createGame(canvas: HTMLCanvasElement, existingState?: GameState)
 
     if (minutesElapsed === 0) return
 
-    // Tick developer AI
-    for (const dev of developers) {
-      const pairPartner =
-        state.practices.pairProgramming && dev.state.assignedStoryId
-          ? (developers.find(
-              (d) => d !== dev && d.state.assignedStoryId === dev.state.assignedStoryId,
-            )?.state.id ?? null)
-          : null
-
-      dev.tick(
-        state.clock,
-        state.practices,
-        state.codebase.techDebt,
-        gameRenderer.office.locations,
-        pairPartner,
-      )
-
+    // Tick worker AI
+    for (const worker of workers) {
+      worker.tick(state.clock, gameRenderer.office.locations)
       // Sync state back
-      const idx = state.developers.findIndex((d) => d.id === dev.state.id)
-      if (idx >= 0) state.developers[idx] = dev.state
+      const idx = state.team.findIndex((w) => w.id === worker.state.id)
+      if (idx >= 0) state.team[idx] = worker.state
     }
 
-    // Progress stories
-    if (state.sprint.phase === 'active') {
-      const sprintStories = state.backlog.filter((s) => state.sprint.stories.includes(s.id))
-      const updated = tickStoryProgress(
-        sprintStories,
-        state.developers,
-        state.practices,
-        state.clock,
-      )
-      const reviewed = tickReview(updated)
+    // Track day changes for sprint advancement
+    if (clock.day > prevDay) {
+      state.sprint.dayInSprint++
 
-      // Merge back
-      for (const story of reviewed) {
-        const idx = state.backlog.findIndex((s) => s.id === story.id)
-        if (idx >= 0) state.backlog[idx] = story
+      // Sprint complete?
+      if (state.sprint.dayInSprint >= state.sprint.daysPerSprint) {
+        // Calculate progress for this sprint
+        const sprintProgress = calculateSprintProgress(state.team)
+        state.progress = Math.min(1, state.progress + sprintProgress)
+        state.quality = calculateQuality(state.team)
+
+        state.sprint.current++
+        state.sprint.dayInSprint = 0
+
+        // All sprints done?
+        if (state.sprint.current >= state.sprint.total) {
+          state.result = calculateResult(state)
+          state.phase = 'ended'
+          state.clock.paused = true
+        }
       }
     }
-
-    // Advance sprint day after work — so the last day isn't lost
-    if (clock.day > prevDay && state.sprint.phase === 'active') {
-      state.sprint = advanceDay(state.sprint)
-    }
-
-    // Update build light
-    gameRenderer.setBuildLight(state.codebase.ciStatus)
   }
 
   const instance: GameInstance = {
     scene: gameRenderer.scene,
     camera: gameRenderer.camera,
     renderer: gameRenderer.renderer,
-
     state,
 
     start() {
-      // Only auto-unpause for new games; saved games keep their paused state
-      if (!existingState) {
-        state.clock.paused = false
-      }
       gameRenderer.start()
     },
 
@@ -165,146 +185,37 @@ export function createGame(canvas: HTMLCanvasElement, existingState?: GameState)
     getState() {
       return {
         ...state,
-        developers: state.developers.map((d) => ({
-          ...d,
-          position: [...d.position] as [number, number, number],
+        team: state.team.map((w) => ({
+          ...w,
+          position: [...w.position] as [number, number, number],
         })),
-        backlog: state.backlog.map((s) => ({ ...s })),
-        feedback: state.feedback.map((f) => ({ ...f })),
-        practices: { ...state.practices },
-        codebase: { ...state.codebase },
+        sprint: { ...state.sprint },
         clock: { ...state.clock },
-        sprint: { ...state.sprint, stories: [...state.sprint.stories] },
+        chosenApp: state.chosenApp ? { ...state.chosenApp } : null,
+        result: state.result ? { ...state.result } : null,
       }
     },
 
-    updateState(partial) {
-      Object.assign(state, partial)
-
-      if (partial.developers) {
-        for (let i = 0; i < developers.length; i++) {
-          developers[i].state = state.developers[i]
-        }
+    spawnWorkers(workerStates: WorkerState[]) {
+      // Remove existing workers
+      for (const w of workers) {
+        gameRenderer.removeFromScene(w.mesh.root)
       }
+      workers = []
 
-      if (partial.codebase) {
-        gameRenderer.setBuildLight(state.codebase.ciStatus)
-      }
-    },
-
-    beginSprint(storyIds: string[], didPlanning: boolean) {
-      for (const id of storyIds) {
-        const story = state.backlog.find((s) => s.id === id)
-        if (story) {
-          story.status = 'todo'
-          if (didPlanning) story.wasPlanned = true
-        }
-      }
-      state.sprint = startSprint(state.sprint, storyIds, didPlanning)
-    },
-
-    assignStory(devId: string, storyId: string) {
-      const dev = state.developers.find((d) => d.id === devId)
-      const story = state.backlog.find((s) => s.id === storyId)
-      if (dev && story) {
-        const othersOnStory = state.developers.filter(
-          (d) => d.assignedStoryId === storyId && d.id !== devId,
-        )
-
-        // Allow two devs on one story when pair programming is enabled
-        const maxDevs = state.practices.pairProgramming ? 2 : 1
-        if (othersOnStory.length >= maxDevs) {
-          // Evict existing devs to make room
-          for (const d of othersOnStory) {
-            d.assignedStoryId = null
-            const inst = developers.find((di) => di.state.id === d.id)
-            if (inst) inst.state.assignedStoryId = null
-          }
-        }
-
-        dev.assignedStoryId = storyId
-        story.status = 'in_progress'
-        const devInstance = developers.find((d) => d.state.id === devId)
-        if (devInstance) devInstance.state.assignedStoryId = storyId
+      // Create new workers
+      for (let i = 0; i < workerStates.length; i++) {
+        const worker = new Developer(workerStates[i], i)
+        workers.push(worker)
+        gameRenderer.addToScene(worker.mesh.root)
       }
     },
 
-    unassignStory(devId: string) {
-      const dev = state.developers.find((d) => d.id === devId)
-      if (dev) {
-        dev.assignedStoryId = null
-        const devInstance = developers.find((d) => d.state.id === devId)
-        if (devInstance) devInstance.state.assignedStoryId = null
+    clearWorkers() {
+      for (const w of workers) {
+        gameRenderer.removeFromScene(w.mesh.root)
       }
-    },
-
-    shipRelease() {
-      const doneStories = state.backlog.filter(
-        (s) => state.sprint.stories.includes(s.id) && s.status === 'done',
-      )
-      state.codebase = shipRelease(state.codebase, doneStories, state.practices)
-
-      const sprintRng = createRng(state.seed + state.sprint.number)
-      const feedback = generateFeedback(
-        sprintRng,
-        state.sprint.number,
-        doneStories,
-        state.codebase,
-        state.practices,
-      )
-      state.feedback.push(...feedback)
-
-      state.sprint = shipSprint(state.sprint, false)
-      gameRenderer.setBuildLight(state.codebase.ciStatus)
-
-      return { feedback, velocity: sprintVelocity(doneStories), codebase: { ...state.codebase } }
-    },
-
-    nextSprint() {
-      // Reset incomplete stories from the old sprint back to backlog
-      for (const storyId of state.sprint.stories) {
-        const story = state.backlog.find((s) => s.id === storyId)
-        if (story && story.status !== 'done') {
-          story.status = 'backlog'
-          story.progress = 0
-          story.quality = 0
-          story.wasPlanned = false
-          story.hasTests = false
-          story.wasReviewed = false
-          story.wasRefactored = false
-        }
-      }
-
-      // Clear all dev assignments
-      for (const dev of state.developers) {
-        dev.assignedStoryId = null
-      }
-      for (const devInstance of developers) {
-        devInstance.state.assignedStoryId = null
-      }
-
-      state.sprint = createSprint(state.sprint.number + 1)
-    },
-
-    togglePractice(key: keyof Practices) {
-      state.practices[key] = !state.practices[key]
-    },
-
-    setPaused(paused: boolean) {
-      state.clock.paused = paused
-    },
-
-    setSpeed(speed: number) {
-      state.clock.speed = speed
-    },
-
-    fastForward(ticks: number) {
-      const wasPaused = state.clock.paused
-      state.clock.paused = false
-      for (let i = 0; i < ticks; i++) {
-        gameTick()
-      }
-      state.clock.paused = wasPaused
+      workers = []
     },
 
     applyPanDeltaPixels(dx: number, dy: number) {

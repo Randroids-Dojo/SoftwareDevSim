@@ -1,6 +1,6 @@
 # SoftwareDevSim — Game Design Document
 
-> A voxel office sim where 3 developers build an app using XP/agile/lean practices with AI coding tools. The player manages sprints, assigns work, and balances velocity vs quality vs tech debt.
+> A voxel office sim where you hire a team and watch them build an app over 4 sprints. Balance your budget across Developers, Designers, Product Owners, and Managers — then see if you turn a profit.
 
 ---
 
@@ -9,11 +9,11 @@
 **Title:** SoftwareDevSim
 **Genre:** Simulation / Management
 **Platform:** Web (browser-based)
-**Tech Stack:** Next.js 15, TypeScript, Three.js (voxel rendering), Upstash Redis
+**Tech Stack:** Next.js 15, TypeScript, Three.js (voxel rendering)
 
 ### Elevator Pitch
 
-Manage a 3-person dev team building an app — plan sprints, assign stories, toggle engineering practices, and discover that agentic AI coding is a force multiplier for your process, not a replacement for it.
+You have $500K and 4 sprints. Choose an app to build, hire your team, and watch them work in a voxel office. Your team composition determines what ships — hire all managers and nothing gets built. Find the right mix and you might get an S-grade.
 
 ### Target Audience
 
@@ -25,60 +25,76 @@ Software developers and engineering managers who enjoy simulation/management gam
 
 ### Theme
 
-The real danger of AI coding isn't AI itself — it's bad engineering practices. Good process + AI = shipping fast with high quality. Bad process + AI = generating bad code faster.
+Team composition matters more than headcount. The right roles working together outperform a large unfocused team.
 
 ### Player Fantasy
 
-You're a tech lead who gets to prove that investing in engineering practices (TDD, CI, code review, sprint planning, refactoring) pays off — even when the pressure is to skip them and ship faster.
+You're a startup founder who gets to experiment with different team compositions and see the consequences play out in real time.
 
 ### Core Loop
 
 ```
-Sprint Planning → Devs Work → Ship Release → User Feedback → Repeat
+Choose App → Hire Team → Watch 4 Sprints → See Results → Retry
 ```
 
-The player picks user stories from a backlog, assigns them to developers, and decides which engineering practices to invest in. Each sprint takes ~2 minutes of real time.
+The player picks an app to build, allocates budget across roles, and watches the office animate through 4 sprints. At the end, they see a letter grade, cost/revenue breakdown, and can retry with a different strategy.
 
 ### Win/Loss Conditions
 
-No explicit win/loss — the game is a sandbox. But tech debt > 0.7 triggers a "death spiral" where everything slows down, morale drops, and more shortcuts get taken. The implicit goal is to ship the most points with the highest quality.
+No explicit loss — the game always runs 4 sprints. The implicit goal is to maximize ROI. Grades range from S (ROI >= 300%) to F (ROI < -50%).
 
 ---
 
 ## 3. Game Mechanics
 
-### Primary Mechanics
+### App Choices
 
-#### Engineering Practices (toggleable safety nets)
+| App | Complexity | Est. Sprints | Revenue Potential |
+|-----|-----------|-------------|------------------|
+| Todo App | Simple | 2 | $120,000 |
+| Fitness Tracker | Medium | 4 | $350,000 |
+| E-Commerce Platform | Complex | 6 | $750,000 |
 
-| Practice | Effect | Without It |
-|----------|--------|------------|
-| Sprint Planning | Stories validated; fewer wasted features | 30% chance completed story is "wrong feature" |
-| TDD / Tests | Quality floor 0.85; bugs caught before shipping | Quality capped at 0.6; tech debt rises faster |
-| Code Review | Quality +0.15; catches architecture issues | Architecture degrades; subtle bugs compound |
-| CI/CD Pipeline | Broken builds caught instantly | Broken code ships silently |
-| Pair Programming | Knowledge sharing; 1.3x quality | Single points of failure; knowledge silos |
-| Refactoring Budget | Tech debt decreases each sprint | Tech debt only increases; eventual death spiral |
+The player has 4 sprints regardless. Simple apps are easy to complete; complex apps offer higher reward but may not finish.
 
-#### AI Coding (always on — this is the future)
+### Team Roles
 
-All devs use agentic AI tools. AI multiplies your existing process:
+| Role | Salary/Sprint | Effect |
+|------|--------------|--------|
+| Developer | $15,000 | +20% app progress per sprint |
+| Designer | $12,000 | +0.15 quality (only with devs present) |
+| Product Owner | $18,000 | +25% dev effectiveness (multiplicative) |
+| Manager | $20,000 | 1st: +10% coordination bonus. Each additional: -15% productivity (meetings!) |
 
-| Your Process | AI Effect |
-|-------------|-----------|
-| Good practices | 2x speed, quality stays high |
-| Some practices | 1.5x speed, quality gaps amplified |
-| No practices (yolo) | 2x speed, 2x tech debt |
+**Starting budget:** $500,000
+**Max team size:** 6 per role (24 total, but budget limits practical size to 3-5)
 
-### Secondary Mechanics
+### Scoring
 
-- **Developer Needs:** morale, energy, focus (0-1 each, decay/restore)
-- **Tech Debt:** accumulates from missing practices, triggers death spiral at 0.7
-- **User Feedback:** random events based on quality/debt after each release
+- **Progress:** Accumulated over 4 sprints based on dev count, PO boost, and manager effect
+- **Completion:** Progress scaled by app difficulty (`estimatedSprints / 4`)
+- **Quality:** 0.3 base (with devs) + 0.15 per designer, capped at 1.0. Zero without devs.
+- **Revenue:** `appPotential * completion * (0.5 + quality)`. Requires >= 40% completion to ship anything.
+- **Cost:** Sum of all salaries across 4 sprints
+- **ROI:** `(revenue - cost) / cost * 100`
 
-### Progression
+### Grading
 
-Sprints get harder as the backlog grows more complex. The codebase's quality/debt scores compound over time, making early practice investment critical.
+| Grade | ROI Threshold |
+|-------|--------------|
+| S | >= 300% |
+| A | >= 150% |
+| B | >= 50% |
+| C | >= 0% |
+| D | >= -50% |
+| F | < -50% |
+
+### Degenerate Team Examples
+
+- **All managers:** 0 devs = 0 progress = F grade
+- **All designers:** 0 devs = 0 quality (no product to design) = F grade
+- **1 dev, no PO/designer:** Low progress, low quality = likely D or F
+- **2 devs, 1 PO, 1 designer:** Solid team = B or A depending on app choice
 
 ---
 
@@ -92,25 +108,26 @@ A voxel office (~24x16x8 voxels). Orthographic camera, front wall open.
 
 | Location | Position | Purpose |
 |----------|----------|---------|
-| desk_0, desk_1 | Front-left pair | Paired desks |
-| desk_2, desk_3 | Front-right pair | Paired desks |
+| desk_0, desk_1 | Front-left pair | Work desks |
+| desk_2, desk_3 | Front-right pair | Work desks |
 | coffee | Back-right corner | Break spot |
-| meeting | Back-left | Standup circle |
-| whiteboard | Back-center | Kanban display + build light |
+| meeting | Back-left | Meeting area |
+| whiteboard | Back-center | PO workspace + build light |
 
-### Characters
+### Character Behavior by Role
 
-Three developers with distinct traits:
+| Role | Primary Activity | Location |
+|------|-----------------|----------|
+| Developer | Typing at desk | desk (assigned by index) |
+| Designer | Typing at desk | desk (assigned by index) |
+| Product Owner | Alternates meeting/working | whiteboard + desk |
+| Manager | Meetings, then coffee | meeting area + coffee |
 
-| Name | Trait | Description |
-|------|-------|-------------|
-| Alex | Architect | Thinks about structure; architecture-boosting |
-| Jordan | Craftsman | Meticulous; quality-boosting |
-| Sam | Hustler | Fast but sloppy; velocity-boosting |
+Workers take coffee breaks when energy is low. Outside work hours (before 9am, after 6pm), everyone is idle.
 
 ### Character Activities
 
-idle, moving, working (typing), pairing, meeting (talking), break (drinking coffee)
+idle, moving, working (typing), meeting (talking), break (drinking coffee)
 
 ---
 
@@ -119,75 +136,67 @@ idle, moving, working (typing), pairing, meeting (talking), break (drinking coff
 ### Data Model
 
 ```
-Developer: id, name, trait, stats {morale, energy, focus},
-           currentActivity, assignedStoryId, position
+WorkerState: id, name, role (developer|designer|product_owner|manager),
+             salary, energy, currentActivity, position
 
-UserStory:  id, title, points (1/2/3/5/8), status (backlog→todo→in_progress→review→done),
-            quality, testCoverage, progress, wasPlanned, hasTests, wasReviewed, wasRefactored
+AppChoice:   id, name, description, complexity, estimatedSprints, revenuePotential
 
-Sprint:     number, phase (planning|active|review|shipped), dayInSprint,
-            stories[], hadPlanning, hadRetro
+SprintState: current (0-3), total (4), dayInSprint, daysPerSprint (5)
 
-Codebase:   techDebt, quality, ciStatus, totalPointsShipped, releasesShipped, architecture
-
-GameState:  clock, developers[], sprint, backlog[], codebase, feedback[], practices, seed
+GameState:   phase, cash, chosenApp, team[], sprint, clock,
+             progress (0-1), quality (0-1), result, seed
 ```
 
 ### State Management
 
 - Game state is a single `GameState` object owned by the game engine
 - React polls it via `useGameState` hook (4x/sec)
-- Persistent storage via Upstash Redis with Zod validation
+- State mutations happen through direct property assignment on `game.state`
+- No persistence — each session is a fresh game
 
 ### Game Clock
 
-- 1 real second = 5 game minutes
+- 1 real second = 5 game minutes (base rate)
+- During auto-play: 20x speed (1 real second = 100 game minutes)
 - Work hours: 9am-6pm
-- Sprint length: 10 game days
+- Sprint length: 5 game days
+- Total: 4 sprints = 20 game days
 
-### API Routes
+### Sprint Progression
 
-- `GET /api/game/[id]` — Load game state
-- `POST /api/game/[id]` — Save game state (version guard)
-- `GET /api/health` — Health check
+Progress and quality are calculated once per sprint completion (not per-tick). Each sprint:
+1. Clock ticks at 20x speed
+2. Workers animate based on role (devs type, POs visit whiteboard, managers hold meetings)
+3. After 5 game days: sprint completes, progress/quality updated
+4. After 4 sprints: result calculated, end screen shown
 
 ---
 
 ## 6. User Interface
 
-### Screens / Views
+### Game Flow Screens
 
-Full-screen 3D canvas with overlay UI. Supports camera zoom and panning.
+| Screen | Description |
+|--------|-------------|
+| **Title** | Game name, budget intro, Start button |
+| **App Selection** | 3 cards: Todo App, Fitness Tracker, E-Commerce Platform |
+| **Hire Team** | +/- controls for each role, live budget tracking |
+| **Sprint Overlay** | Sprint counter, day progress bar, overall progress bar |
+| **End Screen** | Letter grade, completion %, quality %, cost/revenue/ROI breakdown, Retry button |
+
+All screens render as overlays on top of the 3D office canvas.
 
 ### Camera Controls
 
 | Input | Action |
 |-------|--------|
-| Mouse drag | Pan camera |
+| Left mouse drag | Pan camera |
+| Right mouse drag | Rotate orbit |
 | Mouse wheel | Zoom in/out |
 | Single-finger drag (touch) | Pan camera |
-| Two-finger pinch (touch) | Zoom in/out |
+| Two-finger pinch (touch) | Zoom + rotate |
 
-Zoom range: 0.5x (zoomed out) to 4x (zoomed in). Pan is clamped to keep the office in view. Camera pans in screen-space (content follows pointer/finger).
-
-### HUD (top bar)
-
-Sprint day, velocity, quality, morale, tech debt, CI status, points shipped. Text is non-selectable (`select-none`) to prevent accidental text selection during mobile touch interactions.
-
-### Menu Bar (bottom)
-
-Sprint | Team | Backlog | Practices | Ship + speed controls (pause, 1x, 2x, 5x). Respects mobile safe-area insets for devices with gesture bars.
-
-### Panels (slide up from bottom)
-
-Each panel header has a collapse chevron (▾) that collapses the panel back to the menu bar. Clicking a different menu tab also switches panels.
-
-- **SprintPanel:** Pick stories for sprint, start with/without planning
-- **TeamPanel:** Assign stories to devs, view dev stats
-- **PracticesPanel:** Toggle engineering practices
-- **BacklogPanel:** View full backlog with status
-- **ShipPanel:** Ship release, view feedback
-- **KanbanOverlay:** Todo/InProgress/Review/Done columns
+Zoom range: 0.5x to 4x. Pan is clamped to keep the office in view.
 
 ---
 
@@ -195,15 +204,15 @@ Each panel header has a collapse chevron (▾) that collapses the panel back to 
 
 ### Visual Style
 
-Voxel art with an isometric-ish orthographic camera. Warm office colors. Monitor screens glow green (AI-assisted coding). Build light near whiteboard shows CI status.
+Voxel art with an isometric-ish orthographic camera. Warm office colors. Monitor screens glow green. Build light near whiteboard.
 
-### Visual Polish
+### Character Animations
 
-- Terminal glow on all screens (AI is always on)
-- Pair programming: two devs at one desk
-- Standup: devs walk to meeting area, talk, return
-- Build light: green/red/yellow voxel
-- Thought bubbles: devs say things ("Tests passing!", "This architecture is clean", "Need coffee")
+- **sit:** Seated idle at desk
+- **type:** Seated typing (arms on keyboard)
+- **walk:** Walking between locations
+- **talk:** Standing, gesticulating (meetings)
+- **drink:** Coffee break (arm raised)
 
 ### Audio
 
@@ -213,7 +222,7 @@ Silent for MVP. Ambient office sounds possible future enhancement.
 
 ## 8. Multiplayer / Social
 
-Single player for MVP. No multiplayer planned.
+Single player. No multiplayer planned.
 
 ---
 
@@ -228,23 +237,20 @@ Free and open source.
 | Milestone | Description | Status |
 |-----------|-------------|--------|
 | M0 — Scaffold | Project setup, CI/CD, basic Next.js app | Done |
-| Phase 1 — Static Office | Voxel office renders with one dev typing | Done |
-| Phase 2 — Multi-Character | 3 devs with state machines, needs, pathfinding | Done |
-| Phase 3 — Sprint Engine | Sprint cycle, story progress, tech debt, feedback | Done |
-| Phase 4 — Player UI | Sprint planning, team mgmt, practices, shipping | Done |
-| Phase 5 — Visual Polish | Animations, thought bubbles, screen glow, build light | In Progress |
-| Camera Controls | Zoom and pan (mouse wheel/drag, touch pinch/drag) | Done |
-| Phase 6 — Persistence | Save/load game state via Redis | Done |
-| New Game Flow | Intro screen, load saved state, auto-onboarding | Done |
+| Phase 1 — Static Office | Voxel office renders with characters | Done |
+| Phase 2 — Character System | Character meshes, animations, pathfinding, state machine | Done |
+| Camera Controls | Zoom, pan, rotate (mouse + touch) | Done |
 | Tooling | Prettier, ESLint strict, coverage thresholds, CI enforcement | Done |
+| Basic Game Loop | Choose app, hire team, auto-play 4 sprints, end screen with grading | Done |
 
 ---
 
 ## 11. Open Questions
 
-- Should developer traits have mechanical effects beyond flavor?
-- How should the game introduce practices gradually (tutorial)?
-- Should there be explicit "game over" conditions?
+- Should hiring include a "tip" or hint about what makes a good team?
+- Should sprint-by-sprint progress be shown (breakdown per sprint)?
+- Should there be unlockable team compositions or achievements?
+- Should the office grow/change based on team size?
 
 ---
 
@@ -252,23 +258,13 @@ Free and open source.
 
 ### References & Inspiration
 
-- **mi-casa-es-su-casa**: Three.js voxel rendering patterns, tick-based simulation, character state machines
 - **Game Dev Tycoon**: Management sim with cascading quality decisions
 - **Factorio**: Optimization loop, compound effects of early decisions
-
-### Tech Debt Sources
-
-| Source | Cause |
-|--------|-------|
-| No tests | Bugs slip through, patches create spaghetti |
-| No code review | Poor architecture decisions compound |
-| No refactoring | Complexity grows unchecked |
-| Building wrong thing | Dead code, pivots require rework |
-| Crunch/low morale | Sloppy shortcuts under pressure |
+- **Lemonade Stand**: Simple economic game with clear inputs/outputs
 
 ### Glossary
 
-- **Sprint:** A 10-day work cycle
-- **Story:** A unit of work with point value
-- **Tech Debt:** Accumulated code quality problems (0-1 scale)
-- **Death Spiral:** Tech debt > 0.7, everything compounds negatively
+- **Sprint:** A 5-day work cycle (4 sprints per game)
+- **Progress:** How much of the app has been built (0-1 scale)
+- **Quality:** How well the app is built (0-1 scale, requires devs and designers)
+- **ROI:** Return on Investment — `(revenue - cost) / cost * 100%`

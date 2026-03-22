@@ -1,7 +1,8 @@
 import * as THREE from 'three'
 import { createOffice, type OfficeScene } from './office'
 import { PALETTE } from './palette'
-import type { CIStatus } from './types'
+
+type CIStatus = 'green' | 'red' | 'building'
 
 export interface GameRenderer {
   scene: THREE.Scene
