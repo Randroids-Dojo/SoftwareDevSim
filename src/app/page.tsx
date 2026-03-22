@@ -344,9 +344,13 @@ function SprintOverlay({
                 {/* Pause / Resume button */}
                 <button
                   onClick={togglePause}
-                  className="pointer-events-auto px-3 py-1 rounded text-xs font-medium transition-colors bg-gray-700 hover:bg-gray-600 text-white"
+                  className={`pointer-events-auto px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                    paused
+                      ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                      : 'bg-yellow-600 hover:bg-yellow-500 text-white'
+                  }`}
                 >
-                  {paused ? 'Resume' : 'Pause'}
+                  {paused ? '▶ Resume' : '⏸ Pause'}
                 </button>
               </div>
             </div>
@@ -431,9 +435,9 @@ function SprintOverlay({
 
       {/* Paused overlay with feedback panel */}
       {paused && (
-        <div className="absolute inset-0 z-10 pointer-events-none">
+        <div className="absolute inset-0 z-20 pointer-events-none">
           {/* Dim overlay */}
-          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-black/50" />
 
           {/* PAUSED badge */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
