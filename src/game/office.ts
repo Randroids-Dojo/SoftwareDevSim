@@ -29,21 +29,21 @@ function buildWalls(group: THREE.Group) {
 
 function buildDesk(group: THREE.Group, x: number, z: number): THREE.Mesh {
   // Desktop surface
-  box(group, [x, 2.2, z], [3, 0.2, 2], PALETTE.deskTop)
+  box(group, [x, 1.4, z], [3, 0.2, 2], PALETTE.deskTop)
   // Legs
-  box(group, [x, 0, z], [0.2, 2.2, 0.2], PALETTE.deskLegs)
-  box(group, [x + 2.8, 0, z], [0.2, 2.2, 0.2], PALETTE.deskLegs)
-  box(group, [x, 0, z + 1.8], [0.2, 2.2, 0.2], PALETTE.deskLegs)
-  box(group, [x + 2.8, 0, z + 1.8], [0.2, 2.2, 0.2], PALETTE.deskLegs)
+  box(group, [x, 0, z], [0.2, 1.4, 0.2], PALETTE.deskLegs)
+  box(group, [x + 2.8, 0, z], [0.2, 1.4, 0.2], PALETTE.deskLegs)
+  box(group, [x, 0, z + 1.8], [0.2, 1.4, 0.2], PALETTE.deskLegs)
+  box(group, [x + 2.8, 0, z + 1.8], [0.2, 1.4, 0.2], PALETTE.deskLegs)
 
   // Monitor
-  box(group, [x + 0.8, 2.4, z + 1.2], [1.4, 1.0, 0.1], PALETTE.monitorFrame)
-  const screen = box(group, [x + 0.9, 2.5, z + 1.19], [1.2, 0.8, 0.1], PALETTE.monitorScreen)
+  box(group, [x + 0.8, 1.6, z + 1.2], [1.4, 1.0, 0.1], PALETTE.monitorFrame)
+  const screen = box(group, [x + 0.9, 1.7, z + 1.19], [1.2, 0.8, 0.1], PALETTE.monitorScreen)
   // Monitor stand
-  box(group, [x + 1.3, 2.4, z + 1.0], [0.4, 0.05, 0.4], PALETTE.monitorFrame)
+  box(group, [x + 1.3, 1.6, z + 1.0], [0.4, 0.05, 0.4], PALETTE.monitorFrame)
 
   // Keyboard
-  box(group, [x + 0.8, 2.42, z + 0.4], [1.2, 0.05, 0.4], PALETTE.keyboard)
+  box(group, [x + 0.8, 1.62, z + 0.4], [1.2, 0.05, 0.4], PALETTE.keyboard)
 
   // Chair — scaled to character proportions
   box(group, [x + 0.8, 0, z - 0.8], [1.4, 1.2, 0.1], PALETTE.chair)
