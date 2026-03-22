@@ -99,7 +99,7 @@ export class Developer {
       this.state.position[1],
       this.state.position[2],
     )
-    this.mesh.root.rotation.y = this.facing
+    this.mesh.root.rotation.y = this.facing + Math.PI
   }
 }
 
