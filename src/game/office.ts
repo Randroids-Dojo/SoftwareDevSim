@@ -27,7 +27,7 @@ function buildWalls(group: THREE.Group) {
   box(group, [24, 0, 0], [0.5, 8, 16], PALETTE.wall)
 }
 
-function buildDesk(group: THREE.Group, x: number, z: number): THREE.Mesh {
+function buildDesk(group: THREE.Group, x: number, z: number): { screen: THREE.Mesh; chair: THREE.Group } {
   // Desktop surface
   box(group, [x, 0.9, z], [3, 0.15, 2], PALETTE.deskTop)
   // Legs
@@ -45,14 +45,16 @@ function buildDesk(group: THREE.Group, x: number, z: number): THREE.Mesh {
   // Keyboard
   box(group, [x + 0.8, 1.07, z + 0.4], [1.2, 0.05, 0.4], PALETTE.keyboard)
 
-  // Chair — scaled to character proportions
-  box(group, [x + 1.1, 0, z - 0.8], [0.8, 1.2, 0.1], PALETTE.chair)
-  box(group, [x + 1.1, 0.35, z - 0.7], [0.8, 0.15, 0.5], PALETTE.chairSeat)
+  // Chair — as a separate group so it can slide in/out
+  const chair = new THREE.Group()
+  box(chair, [x + 1.1, 0, z - 0.8], [0.8, 1.2, 0.1], PALETTE.chair)
+  box(chair, [x + 1.1, 0.35, z - 0.7], [0.8, 0.15, 0.5], PALETTE.chairSeat)
   // Front legs
-  box(group, [x + 1.1, 0, z - 0.3], [0.1, 0.35, 0.1], PALETTE.chair)
-  box(group, [x + 1.8, 0, z - 0.3], [0.1, 0.35, 0.1], PALETTE.chair)
+  box(chair, [x + 1.1, 0, z - 0.3], [0.1, 0.35, 0.1], PALETTE.chair)
+  box(chair, [x + 1.8, 0, z - 0.3], [0.1, 0.35, 0.1], PALETTE.chair)
+  group.add(chair)
 
-  return screen
+  return { screen, chair }
 }
 
 function buildWhiteboard(group: THREE.Group) {
@@ -101,11 +103,13 @@ export interface OfficeScene {
   buildLight: THREE.Mesh
   locations: NamedLocation[]
   screenMeshes: THREE.Mesh[]
+  chairGroups: THREE.Group[]
 }
 
 export function createOffice(): OfficeScene {
   const group = new THREE.Group()
   const screenMeshes: THREE.Mesh[] = []
+  const chairGroups: THREE.Group[] = []
 
   buildFloor(group)
   buildWalls(group)
@@ -118,7 +122,9 @@ export function createOffice(): OfficeScene {
     [18, 0, 2], // desk_3
   ]
   for (const pos of deskPositions) {
-    screenMeshes.push(buildDesk(group, pos[0], pos[2]))
+    const { screen, chair } = buildDesk(group, pos[0], pos[2])
+    screenMeshes.push(screen)
+    chairGroups.push(chair)
   }
 
   buildWhiteboard(group)
@@ -140,5 +146,5 @@ export function createOffice(): OfficeScene {
     { name: 'whiteboard', position: [12, 0, 14] },
   ]
 
-  return { group, buildLight, locations, screenMeshes }
+  return { group, buildLight, locations, screenMeshes, chairGroups }
 }
