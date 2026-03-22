@@ -70,15 +70,20 @@ describe('calculateSprintProgress', () => {
 })
 
 describe('calculateQuality', () => {
-  it('returns 0 with no devs', () => {
+  it('returns 0 with no team', () => {
     assert.equal(calculateQuality([]), 0)
+  })
+
+  it('returns 0 with designers but no devs', () => {
+    const team = [makeWorker('designer', 'w-0'), makeWorker('designer', 'w-1')]
+    assert.equal(calculateQuality(team), 0)
   })
 
   it('returns 0.3 base with devs only', () => {
     assert.equal(calculateQuality([makeWorker('developer')]), 0.3)
   })
 
-  it('designers add 0.15 each', () => {
+  it('designers add 0.15 each when devs present', () => {
     const team = [makeWorker('developer', 'w-0'), makeWorker('designer', 'w-1')]
     assert.closeTo(calculateQuality(team), 0.45, 0.001)
   })

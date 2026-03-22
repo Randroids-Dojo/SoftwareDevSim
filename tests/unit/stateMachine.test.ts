@@ -31,9 +31,20 @@ describe('transition', () => {
     assert.equal(transition('break', 'idle'), 'idle')
   })
 
-  it('goes through moving for invalid direct transition', () => {
-    // break -> working is not direct, so goes through moving first
-    assert.equal(transition('break', 'working'), 'moving')
+  it('allows meeting to working', () => {
+    assert.equal(transition('meeting', 'working'), 'working')
+  })
+
+  it('allows meeting to break', () => {
+    assert.equal(transition('meeting', 'break'), 'break')
+  })
+
+  it('allows break to working', () => {
+    assert.equal(transition('break', 'working'), 'working')
+  })
+
+  it('allows break to meeting', () => {
+    assert.equal(transition('break', 'meeting'), 'meeting')
   })
 
   it('stays in current state when no transition possible', () => {

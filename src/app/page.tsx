@@ -362,6 +362,7 @@ function EndScreen({ result, game }: { result: GameResult; game: GameActions }) 
     game.state.quality = 0
     game.state.result = null
     game.state.clock.paused = true
+    game.state.clock.speed = 1
     game.state.clock.day = 1
     game.state.clock.hour = 9
     game.state.clock.minute = 0

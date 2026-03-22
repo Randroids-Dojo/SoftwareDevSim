@@ -33,8 +33,11 @@ export function calculateQuality(team: WorkerState[]): number {
   const designerCount = team.filter((w) => w.role === 'designer').length
   const devCount = team.filter((w) => w.role === 'developer').length
 
+  // No devs = no product to have quality
+  if (devCount === 0) return 0
+
   // Base quality from having devs
-  let quality = devCount > 0 ? 0.3 : 0
+  let quality = 0.3
 
   // Each designer adds 0.15 quality
   quality += designerCount * 0.15
