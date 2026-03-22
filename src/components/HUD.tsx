@@ -10,9 +10,11 @@ interface HUDProps {
 
 function StatBadge({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div className="flex flex-col items-center px-3">
-      <span className="text-xs text-gray-400 uppercase tracking-wider">{label}</span>
-      <span className={`text-sm font-bold ${color}`}>{value}</span>
+    <div className="flex flex-col items-center px-2 sm:px-3">
+      <span className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider whitespace-nowrap">
+        {label}
+      </span>
+      <span className={`text-xs sm:text-sm font-bold ${color}`}>{value}</span>
     </div>
   )
 }
@@ -41,15 +43,21 @@ export default function HUD({ snapshot }: HUDProps) {
 
   return (
     <div
-      className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-2 bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 z-10 select-none"
-      style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0.5rem))' }}
+      className="absolute top-0 left-0 right-0 flex items-center justify-between px-2 sm:px-4 py-2 bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 z-10 select-none overflow-x-auto"
+      style={{
+        paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0.5rem))',
+        paddingLeft: 'max(0.5rem, env(safe-area-inset-left, 0.5rem))',
+        paddingRight: 'max(0.5rem, env(safe-area-inset-right, 0.5rem))',
+      }}
     >
-      <div className="flex items-center gap-1">
-        <span className="text-white font-mono text-sm">{formatTime(clock)}</span>
-        <span className="text-gray-500 text-xs ml-2">Sprint {sprint.number}</span>
-        <span className="text-gray-500 text-xs">Day {sprintDay}</span>
+      <div className="flex items-center gap-1 shrink-0">
+        <span className="text-white font-mono text-xs sm:text-sm">{formatTime(clock)}</span>
+        <span className="text-gray-500 text-[10px] sm:text-xs ml-1 sm:ml-2">
+          Sprint {sprint.number}
+        </span>
+        <span className="text-gray-500 text-[10px] sm:text-xs">Day {sprintDay}</span>
         <span
-          className={`text-xs ml-2 px-2 py-0.5 rounded ${
+          className={`text-[10px] sm:text-xs ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 rounded ${
             sprint.phase === 'planning'
               ? 'bg-blue-900 text-blue-300'
               : sprint.phase === 'active'
@@ -63,7 +71,7 @@ export default function HUD({ snapshot }: HUDProps) {
         </span>
       </div>
 
-      <div className="flex items-center gap-1 divide-x divide-gray-700">
+      <div className="flex items-center gap-0.5 sm:gap-1 divide-x divide-gray-700 shrink-0">
         <StatBadge
           label="Quality"
           value={pct(codebase.quality)}
