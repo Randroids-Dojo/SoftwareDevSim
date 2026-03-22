@@ -27,7 +27,11 @@ function buildWalls(group: THREE.Group) {
   box(group, [24, 0, 0], [0.5, 8, 16], PALETTE.wall)
 }
 
-function buildDesk(group: THREE.Group, x: number, z: number): { screen: THREE.Mesh; chair: THREE.Group } {
+function buildDesk(
+  group: THREE.Group,
+  x: number,
+  z: number,
+): { screen: THREE.Mesh; chair: THREE.Group } {
   // Desktop surface
   box(group, [x, 0.9, z], [3, 0.15, 2], PALETTE.deskTop)
   // Legs
