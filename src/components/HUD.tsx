@@ -40,7 +40,10 @@ export default function HUD({ snapshot }: HUDProps) {
   const sprintDay = `${sprint.dayInSprint + 1}/${getSprintLength()}`
 
   return (
-    <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-2 bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 z-10 select-none">
+    <div
+      className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-2 bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 z-10 select-none"
+      style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0.5rem))' }}
+    >
       <div className="flex items-center gap-1">
         <span className="text-white font-mono text-sm">{formatTime(clock)}</span>
         <span className="text-gray-500 text-xs ml-2">Sprint {sprint.number}</span>
