@@ -1,6 +1,11 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { createClock, createClockTicker, isWorkHours, formatTime } from '../../src/game/simulation/clock'
+import {
+  createClock,
+  createClockTicker,
+  isWorkHours,
+  formatTime,
+} from '../../src/game/simulation/clock'
 
 describe('createClock', () => {
   it('starts at day 1, 9:00, paused', () => {

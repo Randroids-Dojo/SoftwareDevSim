@@ -103,7 +103,9 @@ export interface WallClock {
 }
 
 function buildWallClock(group: THREE.Group): WallClock {
-  const cx = 18, cy = 5.5, cz = 15.25
+  const cx = 18,
+    cy = 5.5,
+    cz = 15.25
   const radius = 0.7
 
   // Clock face (circle facing -z)
@@ -116,7 +118,10 @@ function buildWallClock(group: THREE.Group): WallClock {
 
   // Rim
   const rimGeo = new THREE.RingGeometry(radius - 0.03, radius + 0.04, 32)
-  const rimMat = new THREE.MeshLambertMaterial({ color: PALETTE.monitorFrame, side: THREE.DoubleSide })
+  const rimMat = new THREE.MeshLambertMaterial({
+    color: PALETTE.monitorFrame,
+    side: THREE.DoubleSide,
+  })
   const rim = new THREE.Mesh(rimGeo, rimMat)
   rim.position.set(cx, cy, cz - 0.01)
   rim.rotation.y = Math.PI
