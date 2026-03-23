@@ -110,7 +110,7 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
   // Standup turn tracker — one speaker at a time
   let standupSpeakerIndex = -1 // -1 = no standup active
   let standupSpeakerTimer = 0
-  const SPEAKER_DURATION = 3 // seconds per speaker
+  const SPEAKER_DURATION = 5 * 60 // 5 game-minutes per speaker (= 5 real min at 1x)
   let standupWasActive = false
 
   gameRenderer.onFrame((dt) => {
