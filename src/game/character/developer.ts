@@ -92,16 +92,10 @@ export class Developer {
         this.state.position = result.position
 
         if (result.arrived) {
-          this.state.currentActivity = transition('moving', this.desiredActivity)
-          if (this.targetSeatDirection) {
-            this.facing = Math.atan2(this.targetSeatDirection[0], this.targetSeatDirection[2])
-          }
+          this.arriveAtTarget()
         }
       } else {
-        this.state.currentActivity = transition(this.state.currentActivity, this.desiredActivity)
-        if (this.targetSeatDirection) {
-          this.facing = Math.atan2(this.targetSeatDirection[0], this.targetSeatDirection[2])
-        }
+        this.arriveAtTarget()
       }
     }
 
@@ -138,6 +132,19 @@ export class Developer {
       this.lastBubbleIndex = idx
       bubble.show(lines[idx])
     }
+  }
+
+  /** Snap to target, apply facing, clear movement state so we stop re-evaluating. */
+  private arriveAtTarget() {
+    if (this.targetPosition) {
+      this.state.position = [this.targetPosition[0], this.targetPosition[1], this.targetPosition[2]]
+    }
+    this.state.currentActivity = transition(this.state.currentActivity, this.desiredActivity)
+    if (this.targetSeatDirection) {
+      this.facing = Math.atan2(this.targetSeatDirection[0], this.targetSeatDirection[2])
+    }
+    this.targetPosition = null
+    this.targetSeatDirection = null
   }
 
   private syncMeshPosition() {
