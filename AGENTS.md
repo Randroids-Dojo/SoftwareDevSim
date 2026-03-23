@@ -187,10 +187,32 @@ The character mesh (in `src/game/character/mesh.ts`) is built facing **-Z** (eye
 - **Mesh forward = -Z (local).** The root group is rotated by `Math.PI` at runtime so characters face +Z in world space. Do not change the mesh construction to face a different axis.
 - **Leg/arm rotations are local but flipped by the PI offset.** The PI rotation on root.rotation.y reverses both X-axis and Z-axis rotation effects:
   - **rotation.x:** Positive = forward (toward desk), negative = backward (away from desk).
-  - **rotation.z:** Positive on the right arm = inward (toward body), negative = outward. Opposite for left arm.
+  - **rotation.z:** Left arm: positive = inward (toward body), negative = outward. Right arm: negative = inward, positive = outward.
   - **rotation.y and head rotations** are unaffected (Y axis is unchanged by Y rotation).
 - **`seatDirection`** on `NamedLocation` defines the world-space direction the character should face when seated. The facing angle is computed as `atan2(dir.x, dir.z)` and the PI offset is added in `syncMeshPosition`.
 - **`facingAngle(from, to)`** returns the Y rotation for walking toward a target. The PI offset in `syncMeshPosition` handles the mesh-to-world conversion — do not add extra offsets in animation code.
+
+### Rotation helpers (`src/game/character/rotationHelpers.ts`)
+
+**Always use these constants** instead of raw sign values in animation code. They encode the PI-offset convention so you never need to reason about sign flips:
+
+| Constant | Value | Meaning |
+|----------|-------|---------|
+| `ARM_FORWARD` | `1` | rotation.x toward desk |
+| `ARM_BACKWARD` | `-1` | rotation.x away from desk |
+| `LEFT_ARM_INWARD` | `1` | rotation.z toward body (left arm) |
+| `LEFT_ARM_OUTWARD` | `-1` | rotation.z away from body (left arm) |
+| `RIGHT_ARM_INWARD` | `-1` | rotation.z toward body (right arm) |
+| `RIGHT_ARM_OUTWARD` | `1` | rotation.z away from body (right arm) |
+| `LEG_FORWARD` | `1` | rotation.x toward desk (sitting bend) |
+| `LEG_BACKWARD` | `-1` | rotation.x away from desk |
+| `HEAD_TILT_DOWN` | `-1` | rotation.x looking down |
+| `SEATED_LEG_BEND` | `π/2` | 90° forward bend for sitting |
+
+Usage example:
+```ts
+character.leftArm.rotation.set(ARM_FORWARD * 1.0, 0, LEFT_ARM_INWARD * 0.35)
+```
 
 ### Wall-mounted objects (clock, signs, etc.)
 
@@ -205,6 +227,7 @@ Objects on the back wall have their face rotated `rotation.y = Math.PI` so they 
 2. Arm rotations for typing must reach **toward** the keyboard (positive X rotation in local space)
 3. Walking leg swings should appear natural from the isometric camera angle
 4. After any rotation change, verify from multiple camera angles before committing
+5. Use rotation helper constants — never hardcode sign values for limb directions
 
 ## Pre-Push Checklist
 
