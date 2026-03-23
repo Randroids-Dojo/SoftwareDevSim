@@ -3,6 +3,7 @@ import { Developer } from './character/developer'
 import { createClock, createClockTicker } from './simulation/clock'
 import { calculateSprintProgress, calculateQuality, calculateResult } from './scoring'
 import { isStandupTime } from './character/schedule'
+import { buildStandupCircle } from './office'
 import type { AppChoice, GameInstance, GameState, WorkerState } from './types'
 
 // --- Constants ---
@@ -248,6 +249,11 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
         gameRenderer.removeFromScene(w.mesh.root)
       }
       workers = []
+
+      // Rebuild standup circle to fit the team
+      const nonStandup = gameRenderer.office.locations.filter((l) => !l.name.startsWith('standup_'))
+      const standupLocs = buildStandupCircle(workerStates.length)
+      gameRenderer.office.locations = [...nonStandup, ...standupLocs]
 
       // Create new workers
       for (let i = 0; i < workerStates.length; i++) {

@@ -28,10 +28,10 @@ function getDeskForWorker(workerId: string): string {
   return 'whiteboard'
 }
 
-/** Get the standup circle slot for a worker. */
+/** Get the standup circle slot for a worker. Each worker gets their own slot. */
 function getStandupSlot(workerId: string): string {
   const idx = parseInt(workerId.split('-')[1] ?? '0', 10)
-  return `standup_${idx % 6}`
+  return `standup_${idx}`
 }
 
 /** Role-based behavior during work hours. */

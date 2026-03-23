@@ -168,6 +168,34 @@ function buildWallClock(group: THREE.Group): WallClock {
   return { minuteHand, hourHand }
 }
 
+const STANDUP_CENTER: Vec3 = [12, 0, 12]
+const SLOTS_PER_RING = 6
+const RING_BASE_RADIUS = 1.8
+const RING_SPACING = 1.4
+
+/** Generate standup circle locations — adds concentric rings as team grows. */
+export function buildStandupCircle(teamSize: number): NamedLocation[] {
+  const slots = Math.max(teamSize, 3)
+  const locations: NamedLocation[] = []
+  for (let i = 0; i < slots; i++) {
+    const ring = Math.floor(i / SLOTS_PER_RING)
+    const indexInRing = i % SLOTS_PER_RING
+    const slotsInThisRing = Math.min(SLOTS_PER_RING, slots - ring * SLOTS_PER_RING)
+    const radius = RING_BASE_RADIUS + ring * RING_SPACING
+    const angle = (indexInRing / slotsInThisRing) * Math.PI * 2
+    const x = STANDUP_CENTER[0] + Math.cos(angle) * radius
+    const z = STANDUP_CENTER[2] + Math.sin(angle) * radius
+    const dx = STANDUP_CENTER[0] - x
+    const dz = STANDUP_CENTER[2] - z
+    locations.push({
+      name: `standup_${i}`,
+      position: [x, 0, z],
+      seatDirection: [dx, 0, dz],
+    })
+  }
+  return locations
+}
+
 function buildPlant(group: THREE.Group, x: number, z: number) {
   box(group, [x, 0, z], [0.6, 0.8, 0.6], PALETTE.plantPot)
   box(group, [x - 0.1, 0.8, z - 0.1], [0.8, 1.0, 0.8], PALETTE.plant)
@@ -182,7 +210,7 @@ export interface OfficeScene {
   chairGroups: THREE.Group[]
 }
 
-export function createOffice(): OfficeScene {
+export function createOffice(teamSize = 6): OfficeScene {
   const group = new THREE.Group()
   const screenMeshes: THREE.Mesh[] = []
   const chairGroups: THREE.Group[] = []
@@ -213,24 +241,7 @@ export function createOffice(): OfficeScene {
   buildPlant(group, 0.5, 0.5)
   buildPlant(group, 23, 0.5)
 
-  // Standup circle positions in front of the whiteboard
-  const STANDUP_CENTER: Vec3 = [12, 0, 12]
-  const STANDUP_RADIUS = 1.8
-  const MAX_STANDUP_SLOTS = 6
-  const standupLocations: NamedLocation[] = []
-  for (let i = 0; i < MAX_STANDUP_SLOTS; i++) {
-    const angle = (i / MAX_STANDUP_SLOTS) * Math.PI * 2
-    const x = STANDUP_CENTER[0] + Math.cos(angle) * STANDUP_RADIUS
-    const z = STANDUP_CENTER[2] + Math.sin(angle) * STANDUP_RADIUS
-    // Face toward center of circle
-    const dx = STANDUP_CENTER[0] - x
-    const dz = STANDUP_CENTER[2] - z
-    standupLocations.push({
-      name: `standup_${i}`,
-      position: [x, 0, z],
-      seatDirection: [dx, 0, dz],
-    })
-  }
+  const standupLocations = buildStandupCircle(teamSize)
 
   const locations: NamedLocation[] = [
     { name: 'desk_0', position: [3.5, 0, 1.5], seatDirection: [0, 0, 1] },
