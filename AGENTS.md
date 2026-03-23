@@ -208,15 +208,16 @@ Objects on the back wall have their face rotated `rotation.y = Math.PI` so they 
 
 ## Pre-Push Checklist
 
-Before pushing any branch, **always** run the full verification sequence and fix all errors:
+**MANDATORY — never push without completing ALL steps.** CI will reject the PR otherwise.
 
 ```bash
-npm run format
-npm run lint:fix
-npm run build
+npm run format       # Step 1: autofix formatting (Prettier)
+npm run lint:fix     # Step 2: autofix lint issues (ESLint)
+npm run test:unit    # Step 3: all unit tests must pass
+npm run build        # Step 4: production build (includes tsc + ESLint)
 ```
 
-`npm run build` runs the production Next.js build, which includes TypeScript compilation **and** ESLint. A Vercel deploy will fail on any error this catches, so never push without a clean build.
+Run these **after every commit, before every push** — not just at the end of a session. `npm run format` rewrites files in place; if it changes anything, stage and amend the commit before pushing.
 
 ## Game-Logic Guard Rails
 
