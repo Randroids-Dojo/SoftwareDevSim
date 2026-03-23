@@ -127,7 +127,30 @@ Workers take coffee breaks when energy is low. Outside work hours (before 9am, a
 
 ### Character Activities
 
-idle, moving, working (typing), meeting (talking), break (drinking coffee)
+idle, moving, working (typing), meeting (talking), break (drinking coffee), standup (daily sync)
+
+### Daily Standup & Standdown
+
+Once per day, the entire team gathers for two brief ceremonies:
+
+- **Standup (9:00–9:15 trigger window):** All workers walk to the whiteboard area and form a circle. One speaker at a time presents for 5 game-minutes, showing speech bubbles with standup-style updates.
+- **Standdown (17:00–17:15 trigger window):** Same gathering at end of day, with wrap-up messages.
+
+Speaker turns last 5 game-minutes each (= 5 real minutes at 1×, scales with game speed). Meetings are hard-capped at 1 game-hour — remaining speakers are skipped if the cap is hit. Larger teams spend more of the work day in ceremonies.
+
+After each ceremony, workers return to their desks/overflow spots. Workers with critically low energy (< 5%) skip standup for a coffee break.
+
+Circle positions use concentric rings (6 per ring, 1.8 base radius, 1.4 spacing between rings) centered at [12, 0, 12]. Rings expand automatically to fit the team size.
+
+### Game Clock & Speed
+
+The game clock runs at real time: 1× speed = 1 real minute per game minute. The work day is 9am–6pm (9 hours). Night hours are skipped — the clock jumps from 6pm to 9am the next day.
+
+Speed options: 50× (Slow), 100× (Normal, default), 250× (Fast), 500× (Very Fast). An analog wall clock on the office back wall shows the current game time.
+
+### Overflow Workers
+
+Only 4 physical desks exist. Workers beyond index 3 are assigned unique `overflow_N` positions spread across the room in a grid pattern. All dynamic locations (standup circle + overflow spots) are rebuilt when workers spawn to match the actual team size.
 
 ---
 
@@ -156,16 +179,17 @@ GameState:   phase, cash, chosenApp, team[], sprint, clock,
 
 ### Game Clock
 
-- 1 real second = 5 game minutes (base rate)
-- During auto-play: 20x speed (1 real second = 100 game minutes)
-- Work hours: 9am-6pm
+- Base rate: 1× = real time (1 real minute = 1 game minute)
+- Default speed: 100× (1 real second ≈ 1.67 game minutes)
+- Speed options: 50×, 100×, 250×, 500×
+- Work hours: 9am–6pm (night skipped automatically)
 - Sprint length: 5 game days
 - Total: 4 sprints = 20 game days
 
 ### Sprint Progression
 
 Progress and quality are calculated once per sprint completion (not per-tick). Each sprint:
-1. Clock ticks at 20x speed
+1. Clock ticks at selected speed (default 100×)
 2. Workers animate based on role (devs type, POs visit whiteboard, managers hold meetings)
 3. After 5 game days: sprint completes, progress/quality updated
 4. After 4 sprints: result calculated, end screen shown
@@ -211,8 +235,9 @@ Voxel art with an isometric-ish orthographic camera. Warm office colors. Monitor
 - **sit:** Seated idle at desk
 - **type:** Seated typing (arms on keyboard)
 - **walk:** Walking between locations
-- **talk:** Standing, gesticulating (meetings)
+- **talk:** Standing, gesticulating (meetings & standup)
 - **drink:** Coffee break (arm raised)
+- **chat bubble:** Canvas-rendered speech sprite shown during standup/standdown
 
 ### Audio
 
@@ -242,6 +267,7 @@ Free and open source.
 | Camera Controls | Zoom, pan, rotate (mouse + touch) | Done |
 | Tooling | Prettier, ESLint strict, coverage thresholds, CI enforcement | Done |
 | Basic Game Loop | Choose app, hire team, auto-play 4 sprints, end screen with grading | Done |
+| Standup/Standdown | Daily team ceremonies with circle formation and chat bubbles | Done |
 
 ---
 

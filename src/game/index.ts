@@ -1,7 +1,9 @@
 import { createRenderer } from './renderer'
 import { Developer } from './character/developer'
-import { createClock, tickClock } from './simulation/clock'
+import { createClock, createClockTicker } from './simulation/clock'
 import { calculateSprintProgress, calculateQuality, calculateResult } from './scoring'
+import { isStandupTime } from './character/schedule'
+import { buildStandupCircle, buildOverflowSpots } from './office'
 import type { AppChoice, GameInstance, GameState, WorkerState } from './types'
 
 // --- Constants ---
@@ -99,16 +101,52 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
   gameRenderer.setScreenGlow(true)
   gameRenderer.setBuildLight('green')
 
+  const tickClock = createClockTicker()
   let clockAccumulator = 0
   const TICK_INTERVAL = 1 // 1 real second per tick
 
   // How far the chair slides out to let the character pass
   const CHAIR_SLIDE_DIST = -0.6
 
+  // Standup turn tracker — one speaker at a time
+  let standupSpeakerIndex = -1 // -1 = no standup active
+  let standupSpeakerTimer = 0
+  let standupTotalTimer = 0
+  const SPEAKER_DURATION = 5 * 60 // 5 game-minutes per speaker (= 5 real min at 1x)
+  const MAX_STANDUP_DURATION = 60 * 60 // hard cap: 1 game-hour
+  let standupWasActive = false
+
   gameRenderer.onFrame((dt) => {
+    // Update standup turn coordination
+    const standupTriggered = isStandupTime(state.clock) && workers.length > 0
+    const speakersRemain = standupSpeakerIndex >= 0 && standupSpeakerIndex < workers.length
+    const withinTimeCap = standupTotalTimer < MAX_STANDUP_DURATION
+    const standupActive = (standupTriggered || speakersRemain) && withinTimeCap
+    if (standupActive) {
+      if (!standupWasActive) {
+        standupSpeakerIndex = 0
+        standupSpeakerTimer = 0
+        standupTotalTimer = 0
+      }
+      const gameDt = dt * state.clock.speed
+      standupSpeakerTimer += gameDt
+      standupTotalTimer += gameDt
+      if (standupSpeakerTimer >= SPEAKER_DURATION && standupSpeakerIndex < workers.length) {
+        standupSpeakerTimer = 0
+        standupSpeakerIndex++
+      }
+    } else if (standupWasActive) {
+      standupSpeakerIndex = -1
+      standupSpeakerTimer = 0
+      standupTotalTimer = 0
+    }
+    standupWasActive = standupActive
+
     // Animate characters every frame
-    for (const worker of workers) {
+    for (let i = 0; i < workers.length; i++) {
+      const worker = workers[i]
       worker.animate(dt)
+      worker.updateChatBubble(state.clock, i === standupSpeakerIndex)
     }
 
     // Animate chairs
@@ -119,6 +157,13 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
       const targetZ = activity === 'moving' ? CHAIR_SLIDE_DIST : 0
       chair.position.z += (targetZ - chair.position.z) * Math.min(1, dt * 5)
     }
+
+    // Update wall clock hands based on game time
+    const { hour, minute } = state.clock
+    const minuteAngle = (minute / 60) * Math.PI * 2
+    const hourAngle = (((hour % 12) + minute / 60) / 12) * Math.PI * 2
+    gameRenderer.office.wallClock.minuteHand.rotation.z = minuteAngle
+    gameRenderer.office.wallClock.hourHand.rotation.z = hourAngle
 
     if (state.clock.paused || state.phase !== 'running') return
 
@@ -136,8 +181,10 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
 
     if (minutesElapsed === 0) return
 
-    // Tick worker AI
+    // Tick worker AI (skip while standup meeting is still in progress)
     for (const worker of workers) {
+      const meetingExtended = standupSpeakerIndex >= 0 && standupSpeakerIndex < workers.length
+      if (meetingExtended && worker.state.currentActivity === 'standup') continue
       worker.tick(state.clock, gameRenderer.office.locations)
       // Sync state back
       const idx = state.team.findIndex((w) => w.id === worker.state.id)
@@ -202,6 +249,16 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
         gameRenderer.removeFromScene(w.mesh.root)
       }
       workers = []
+
+      // Rebuild dynamic locations to fit the team
+      const fixed = gameRenderer.office.locations.filter(
+        (l) => !l.name.startsWith('standup_') && !l.name.startsWith('overflow_'),
+      )
+      gameRenderer.office.locations = [
+        ...fixed,
+        ...buildOverflowSpots(workerStates.length),
+        ...buildStandupCircle(workerStates.length),
+      ]
 
       // Create new workers
       for (let i = 0; i < workerStates.length; i++) {

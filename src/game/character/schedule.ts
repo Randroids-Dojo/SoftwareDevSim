@@ -1,21 +1,46 @@
 import type { Role, WorkerState, GameClock } from '../types'
 
 export type ScheduleDecision = {
-  activity: 'break' | 'meeting' | 'working' | 'idle'
+  activity: 'break' | 'meeting' | 'working' | 'idle' | 'standup'
   targetLocation: string
 }
 
-/** Assign desk names by worker index. Only 4 desks available. */
+/** Fixed 15-minute trigger windows for standup and standdown. */
+const STANDUP_WINDOW = 15
+
+export function isStandupTime(clock: GameClock): boolean {
+  const currentMin = clock.hour * 60 + clock.minute
+
+  // Morning standup — 9:00 to 9:15
+  if (currentMin >= 540 && currentMin < 540 + STANDUP_WINDOW) return true
+
+  // End-of-day standdown — 17:00 to 17:15
+  if (currentMin >= 1020 && currentMin < 1020 + STANDUP_WINDOW) return true
+
+  return false
+}
+
+/** Assign desk or overflow spot by worker index. Only 4 desks available. */
 function getDeskForWorker(workerId: string): string {
   const idx = parseInt(workerId.split('-')[1] ?? '0', 10)
   if (idx < 4) return `desk_${idx}`
-  // Overflow workers stand near whiteboard
-  return 'whiteboard'
+  return `overflow_${idx - 4}`
+}
+
+/** Get the standup circle slot for a worker. Each worker gets their own slot. */
+function getStandupSlot(workerId: string): string {
+  const idx = parseInt(workerId.split('-')[1] ?? '0', 10)
+  return `standup_${idx}`
 }
 
 /** Role-based behavior during work hours. */
 function workBehavior(worker: WorkerState, clock: GameClock): ScheduleDecision {
   const desk = getDeskForWorker(worker.id)
+
+  // Standup / standdown takes priority over everything except dangerously low energy
+  if (isStandupTime(clock) && worker.energy >= 0.05) {
+    return { activity: 'standup', targetLocation: getStandupSlot(worker.id) }
+  }
 
   // Low energy → coffee break
   if (worker.energy < 0.2) {

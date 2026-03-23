@@ -1,7 +1,7 @@
 import type { GameClock } from '../types'
 
-/** 1 real second = 5 game minutes. */
-const REAL_SEC_TO_GAME_MIN = 5
+/** At 1× speed the game clock matches real time (1 real minute = 1 game minute). */
+const REAL_SEC_TO_GAME_MIN = 1 / 60
 
 export function createClock(): GameClock {
   return {
@@ -9,40 +9,50 @@ export function createClock(): GameClock {
     hour: 9,
     minute: 0,
     paused: true,
-    speed: 1,
+    speed: 100,
   }
 }
 
 /**
- * Advance the clock by the given real-time delta (seconds).
- * Returns the new clock state and number of game minutes elapsed.
+ * Create a clock ticker that accumulates fractional game minutes between calls
+ * so that slow tick rates (like real-time 1×) don't lose sub-minute deltas.
  */
-export function tickClock(
-  clock: GameClock,
-  realDeltaSec: number,
-): { clock: GameClock; minutesElapsed: number } {
-  if (clock.paused) return { clock, minutesElapsed: 0 }
+export function createClockTicker() {
+  let partialMinutes = 0
 
-  const gameMinutes = realDeltaSec * REAL_SEC_TO_GAME_MIN * clock.speed
-  const totalMinutes = Math.floor(gameMinutes)
+  return function tickClock(
+    clock: GameClock,
+    realDeltaSec: number,
+  ): { clock: GameClock; minutesElapsed: number } {
+    if (clock.paused) return { clock, minutesElapsed: 0 }
 
-  let { day, hour, minute } = clock
+    partialMinutes += realDeltaSec * REAL_SEC_TO_GAME_MIN * clock.speed
+    const totalMinutes = Math.floor(partialMinutes)
+    partialMinutes -= totalMinutes
 
-  minute += totalMinutes
+    if (totalMinutes === 0) return { clock, minutesElapsed: 0 }
 
-  while (minute >= 60) {
-    minute -= 60
-    hour++
-  }
+    let { day, hour, minute } = clock
 
-  while (hour >= 24) {
-    hour -= 24
-    day++
-  }
+    minute += totalMinutes
 
-  return {
-    clock: { ...clock, day, hour, minute },
-    minutesElapsed: totalMinutes,
+    while (minute >= 60) {
+      minute -= 60
+      hour++
+    }
+
+    // Skip night: jump from 6pm to 9am next day
+    if (hour >= 18) {
+      hour = 9
+      minute = 0
+      day++
+      partialMinutes = 0
+    }
+
+    return {
+      clock: { ...clock, day, hour, minute },
+      minutesElapsed: totalMinutes,
+    }
   }
 }
 

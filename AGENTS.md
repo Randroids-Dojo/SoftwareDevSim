@@ -192,6 +192,13 @@ The character mesh (in `src/game/character/mesh.ts`) is built facing **-Z** (eye
 - **`seatDirection`** on `NamedLocation` defines the world-space direction the character should face when seated. The facing angle is computed as `atan2(dir.x, dir.z)` and the PI offset is added in `syncMeshPosition`.
 - **`facingAngle(from, to)`** returns the Y rotation for walking toward a target. The PI offset in `syncMeshPosition` handles the mesh-to-world conversion — do not add extra offsets in animation code.
 
+### Wall-mounted objects (clock, signs, etc.)
+
+Objects on the back wall have their face rotated `rotation.y = Math.PI` so they point toward the camera (-Z). This **mirrors the X axis**, which reverses the sign of `rotation.z` from the viewer's perspective. When rotating hands, dials, or any child of a wall-mounted group:
+
+- **Clockwise rotation (as seen by the player) = positive `rotation.z`**, not negative.
+- Always sanity-check rotation direction visually before committing wall-mounted animation code.
+
 ### Checklist for animation changes
 
 1. Test sitting poses visually — legs must bend **toward** the desk, not away
@@ -201,15 +208,24 @@ The character mesh (in `src/game/character/mesh.ts`) is built facing **-Z** (eye
 
 ## Pre-Push Checklist
 
-Before pushing any branch, **always** run the full verification sequence and fix all errors:
+**MANDATORY — never push without completing ALL steps.** CI will reject the PR otherwise.
 
 ```bash
-npm run format
-npm run lint:fix
-npm run build
+npm run format       # Step 1: autofix formatting (Prettier)
+npm run lint:fix     # Step 2: autofix lint issues (ESLint)
+npm run test:unit    # Step 3: all unit tests must pass
+npm run build        # Step 4: production build (includes tsc + ESLint)
 ```
 
-`npm run build` runs the production Next.js build, which includes TypeScript compilation **and** ESLint. A Vercel deploy will fail on any error this catches, so never push without a clean build.
+Run these **after every commit, before every push** — not just at the end of a session. `npm run format` rewrites files in place; if it changes anything, stage and amend the commit before pushing.
+
+## Game-Logic Guard Rails
+
+When writing or modifying time-based or range-based conditions in game logic:
+
+- **Always use bounded ranges.** A check like `hour >= 16` must include an upper bound (e.g. `hour >= 16 && hour < 18`). Open-ended ranges leak behavior into unintended periods (night, weekends, etc.).
+- **Test boundary values explicitly.** For any time/range condition, write tests for: inside the range, both edges, and clearly outside (e.g. hour 20 for a work-hours feature).
+- **Cross-check with `isWorkHours`.** Schedule activities that should only happen during work must be gated by work-hour boundaries, not just a start threshold.
 
 ## No Broken Windows
 

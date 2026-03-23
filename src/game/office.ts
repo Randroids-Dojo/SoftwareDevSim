@@ -97,6 +97,127 @@ function buildMeetingArea(group: THREE.Group) {
   }
 }
 
+export interface WallClock {
+  minuteHand: THREE.Group
+  hourHand: THREE.Group
+}
+
+function buildWallClock(group: THREE.Group): WallClock {
+  const cx = 18,
+    cy = 5.5,
+    cz = 15.25
+  const radius = 0.7
+
+  // Clock face (circle facing -z)
+  const faceGeo = new THREE.CircleGeometry(radius, 32)
+  const faceMat = new THREE.MeshLambertMaterial({ color: PALETTE.whiteboard })
+  const face = new THREE.Mesh(faceGeo, faceMat)
+  face.position.set(cx, cy, cz)
+  face.rotation.y = Math.PI // face toward camera (-z)
+  group.add(face)
+
+  // Rim
+  const rimGeo = new THREE.RingGeometry(radius - 0.03, radius + 0.04, 32)
+  const rimMat = new THREE.MeshLambertMaterial({
+    color: PALETTE.monitorFrame,
+    side: THREE.DoubleSide,
+  })
+  const rim = new THREE.Mesh(rimGeo, rimMat)
+  rim.position.set(cx, cy, cz - 0.01)
+  rim.rotation.y = Math.PI
+  group.add(rim)
+
+  // Hour markers (12 small ticks)
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2
+    const inner = radius - 0.12
+    const outer = radius - 0.05
+    const mx = Math.sin(angle)
+    const my = Math.cos(angle)
+    const tickGeo = new THREE.BoxGeometry(0.03, outer - inner, 0.02)
+    const tickMat = new THREE.MeshLambertMaterial({ color: PALETTE.monitorFrame })
+    const tick = new THREE.Mesh(tickGeo, tickMat)
+    tick.position.set(
+      cx - mx * (inner + (outer - inner) / 2),
+      cy + my * (inner + (outer - inner) / 2),
+      cz - 0.02,
+    )
+    tick.rotation.z = -angle
+    group.add(tick)
+  }
+
+  // Center dot
+  const dotGeo = new THREE.CircleGeometry(0.04, 16)
+  const dotMat = new THREE.MeshLambertMaterial({ color: PALETTE.monitorFrame })
+  const dot = new THREE.Mesh(dotGeo, dotMat)
+  dot.position.set(cx, cy, cz - 0.03)
+  dot.rotation.y = Math.PI
+  group.add(dot)
+
+  // Hands — each in a group so rotation pivots at the base
+  function makeHand(length: number, width: number): THREE.Group {
+    const handGroup = new THREE.Group()
+    handGroup.position.set(cx, cy, cz - 0.03)
+    const geo = new THREE.BoxGeometry(width, length, 0.02)
+    const mat = new THREE.MeshLambertMaterial({ color: PALETTE.monitorFrame })
+    const mesh = new THREE.Mesh(geo, mat)
+    mesh.position.set(0, length / 2, 0) // offset so base is at origin
+    handGroup.add(mesh)
+    group.add(handGroup)
+    return handGroup
+  }
+
+  const hourHand = makeHand(0.32, 0.05)
+  const minuteHand = makeHand(0.5, 0.035)
+
+  return { minuteHand, hourHand }
+}
+
+const STANDUP_CENTER: Vec3 = [12, 0, 12]
+const SLOTS_PER_RING = 6
+const RING_BASE_RADIUS = 1.8
+const RING_SPACING = 1.4
+
+/** Generate standup circle locations — adds concentric rings as team grows. */
+export function buildStandupCircle(teamSize: number): NamedLocation[] {
+  const slots = Math.max(teamSize, 3)
+  const locations: NamedLocation[] = []
+  for (let i = 0; i < slots; i++) {
+    const ring = Math.floor(i / SLOTS_PER_RING)
+    const indexInRing = i % SLOTS_PER_RING
+    const slotsInThisRing = Math.min(SLOTS_PER_RING, slots - ring * SLOTS_PER_RING)
+    const radius = RING_BASE_RADIUS + ring * RING_SPACING
+    const angle = (indexInRing / slotsInThisRing) * Math.PI * 2
+    const x = STANDUP_CENTER[0] + Math.cos(angle) * radius
+    const z = STANDUP_CENTER[2] + Math.sin(angle) * radius
+    const dx = STANDUP_CENTER[0] - x
+    const dz = STANDUP_CENTER[2] - z
+    locations.push({
+      name: `standup_${i}`,
+      position: [x, 0, z],
+      seatDirection: [dx, 0, dz],
+    })
+  }
+  return locations
+}
+
+const DESK_COUNT = 4
+
+/** Generate overflow work spots for workers beyond the 4 desks. */
+export function buildOverflowSpots(teamSize: number): NamedLocation[] {
+  const count = Math.max(0, teamSize - DESK_COUNT)
+  const locations: NamedLocation[] = []
+  for (let i = 0; i < count; i++) {
+    const x = 3 + ((i * 3) % 18)
+    locations.push({
+      name: `overflow_${i}`,
+      position: [x, 0, 8 + Math.floor(i / 6) * 2],
+      seatDirection: [0, 0, 1],
+    })
+  }
+  return locations
+}
+
 function buildPlant(group: THREE.Group, x: number, z: number) {
   box(group, [x, 0, z], [0.6, 0.8, 0.6], PALETTE.plantPot)
   box(group, [x - 0.1, 0.8, z - 0.1], [0.8, 1.0, 0.8], PALETTE.plant)
@@ -105,12 +226,13 @@ function buildPlant(group: THREE.Group, x: number, z: number) {
 export interface OfficeScene {
   group: THREE.Group
   buildLight: THREE.Mesh
+  wallClock: WallClock
   locations: NamedLocation[]
   screenMeshes: THREE.Mesh[]
   chairGroups: THREE.Group[]
 }
 
-export function createOffice(): OfficeScene {
+export function createOffice(teamSize = 6): OfficeScene {
   const group = new THREE.Group()
   const screenMeshes: THREE.Mesh[] = []
   const chairGroups: THREE.Group[] = []
@@ -133,12 +255,17 @@ export function createOffice(): OfficeScene {
 
   buildWhiteboard(group)
   const buildLight = buildBuildLight(group)
+  const wallClock = buildWallClock(group)
   buildCoffeeMachine(group)
   buildMeetingArea(group)
 
   // Decorative plants
   buildPlant(group, 0.5, 0.5)
   buildPlant(group, 23, 0.5)
+
+  const standupLocations = buildStandupCircle(teamSize)
+
+  const overflowLocations = buildOverflowSpots(teamSize)
 
   const locations: NamedLocation[] = [
     { name: 'desk_0', position: [3.5, 0, 1.5], seatDirection: [0, 0, 1] },
@@ -148,7 +275,9 @@ export function createOffice(): OfficeScene {
     { name: 'coffee', position: [22, 0, 14] },
     { name: 'meeting', position: [3, 0, 13] },
     { name: 'whiteboard', position: [12, 0, 14] },
+    ...overflowLocations,
+    ...standupLocations,
   ]
 
-  return { group, buildLight, locations, screenMeshes, chairGroups }
+  return { group, buildLight, wallClock, locations, screenMeshes, chairGroups }
 }

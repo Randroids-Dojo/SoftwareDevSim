@@ -4,7 +4,14 @@ import { z } from 'zod'
 
 export const RoleSchema = z.enum(['developer', 'designer', 'product_owner', 'manager'])
 
-export const ActivityStateSchema = z.enum(['idle', 'moving', 'working', 'meeting', 'break'])
+export const ActivityStateSchema = z.enum([
+  'idle',
+  'moving',
+  'working',
+  'meeting',
+  'break',
+  'standup',
+])
 
 export const GamePhaseSchema = z.enum(['title', 'choose_app', 'hire_team', 'running', 'ended'])
 

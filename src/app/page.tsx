@@ -209,7 +209,7 @@ function HireTeamScreen({
     game.state.cash = cash - totalCost
     game.state.phase = 'running'
     game.state.clock.paused = false
-    game.state.clock.speed = 20
+    game.state.clock.speed = 100
 
     game.spawnWorkers(workers)
   }
@@ -291,6 +291,13 @@ function HireTeamScreen({
 
 // --- Sprint HUD (during auto-play) ---
 
+const SPEED_OPTIONS = [
+  { speed: 50, label: '\u203A', title: 'Slow' },
+  { speed: 100, label: '\u00BB', title: 'Normal' },
+  { speed: 250, label: '\u00BB\u203A', title: 'Fast' },
+  { speed: 500, label: '\u00BB\u00BB', title: 'Very Fast' },
+] as const
+
 function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActions }) {
   const { sprint, progress, quality, chosenApp, team, clock } = snapshot
   const paused = clock.paused
@@ -309,27 +316,48 @@ function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActi
     game.state.clock.paused = !game.state.clock.paused
   }
 
+  const setSpeed = (speed: number) => {
+    game.state.clock.speed = speed
+  }
+
   return (
     <>
       {/* Top HUD bar — z-30 so the button stays above the z-20 pause overlay */}
       <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none">
         <div className="bg-gray-900/90 border-b border-gray-700/50 backdrop-blur-sm px-4 py-3">
           <div className="max-w-2xl mx-auto">
-            {/* App name + Sprint indicator row */}
+            {/* Title row: app name + sprint */}
+            <div className="flex items-center gap-3 mb-2">
+              {chosenApp && (
+                <span className="text-blue-400 font-semibold text-sm">{chosenApp.name}</span>
+              )}
+              <span className="text-gray-600 text-sm">|</span>
+              <span className="text-white font-bold">Sprint {sprintNum}</span>
+              <span className="text-gray-500 text-sm">of {sprint.total}</span>
+            </div>
+
+            {/* Controls row: day + speed + pause */}
             <div className="flex items-center justify-between mb-3">
+              <span className="text-gray-400 text-sm">
+                Day {sprint.dayInSprint + 1} / {sprint.daysPerSprint}
+              </span>
               <div className="flex items-center gap-3">
-                {chosenApp && (
-                  <span className="text-blue-400 font-semibold text-sm">{chosenApp.name}</span>
-                )}
-                <span className="text-gray-600 text-sm">|</span>
-                <span className="text-white font-bold">Sprint {sprintNum}</span>
-                <span className="text-gray-500 text-sm">of {sprint.total}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-gray-400 text-sm">
-                  Day {sprint.dayInSprint + 1} / {sprint.daysPerSprint}
-                </span>
-                {/* Pause / Resume button */}
+                <div className="flex items-center pointer-events-auto">
+                  {SPEED_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.speed}
+                      onClick={() => setSpeed(opt.speed)}
+                      title={opt.title}
+                      className={`px-2.5 py-1.5 text-xs font-semibold transition-colors first:rounded-l-md last:rounded-r-md border-r border-gray-600 last:border-r-0 ${
+                        clock.speed === opt.speed
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-700 hover:bg-gray-600 text-gray-400'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
                 <button
                   onClick={togglePause}
                   className={`pointer-events-auto px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${
@@ -483,7 +511,7 @@ function EndScreen({ result, game }: { result: GameResult; game: GameActions }) 
     game.state.quality = 0
     game.state.result = null
     game.state.clock.paused = true
-    game.state.clock.speed = 1
+    game.state.clock.speed = 100
     game.state.clock.day = 1
     game.state.clock.hour = 9
     game.state.clock.minute = 0
