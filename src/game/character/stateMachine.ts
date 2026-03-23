@@ -43,6 +43,7 @@ function canTransition(from: ActivityState, to: ActivityState): boolean {
 }
 
 export function transition(current: ActivityState, desired: ActivityState): ActivityState {
+  if (current === desired) return current
   if (canTransition(current, desired)) return desired
   // If direct transition isn't valid, go through moving
   if (current !== 'moving' && canTransition(current, 'moving')) return 'moving'
