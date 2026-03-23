@@ -110,20 +110,26 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
   // Standup turn tracker — one speaker at a time
   let standupSpeakerIndex = -1 // -1 = no standup active
   let standupSpeakerTimer = 0
+  let standupTotalTimer = 0
   const SPEAKER_DURATION = 5 * 60 // 5 game-minutes per speaker (= 5 real min at 1x)
+  const MAX_STANDUP_DURATION = 60 * 60 // hard cap: 1 game-hour
   let standupWasActive = false
 
   gameRenderer.onFrame((dt) => {
     // Update standup turn coordination
     const standupTriggered = isStandupTime(state.clock) && workers.length > 0
     const speakersRemain = standupSpeakerIndex >= 0 && standupSpeakerIndex < workers.length
-    const standupActive = standupTriggered || speakersRemain
+    const withinTimeCap = standupTotalTimer < MAX_STANDUP_DURATION
+    const standupActive = (standupTriggered || speakersRemain) && withinTimeCap
     if (standupActive) {
       if (!standupWasActive) {
         standupSpeakerIndex = 0
         standupSpeakerTimer = 0
+        standupTotalTimer = 0
       }
-      standupSpeakerTimer += dt * state.clock.speed
+      const gameDt = dt * state.clock.speed
+      standupSpeakerTimer += gameDt
+      standupTotalTimer += gameDt
       if (standupSpeakerTimer >= SPEAKER_DURATION && standupSpeakerIndex < workers.length) {
         standupSpeakerTimer = 0
         standupSpeakerIndex++
@@ -131,6 +137,7 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
     } else if (standupWasActive) {
       standupSpeakerIndex = -1
       standupSpeakerTimer = 0
+      standupTotalTimer = 0
     }
     standupWasActive = standupActive
 
