@@ -5,7 +5,7 @@ export type ScheduleDecision = {
   targetLocation: string
 }
 
-/** Fixed 15-minute windows for standup and standdown ceremonies. */
+/** Fixed 15-minute trigger windows for standup and standdown. */
 const STANDUP_WINDOW = 15
 
 export function isStandupTime(clock: GameClock): boolean {
@@ -14,8 +14,8 @@ export function isStandupTime(clock: GameClock): boolean {
   // Morning standup — 9:00 to 9:15
   if (currentMin >= 540 && currentMin < 540 + STANDUP_WINDOW) return true
 
-  // End-of-day standdown — 17:45 to 18:00
-  if (currentMin >= 1080 - STANDUP_WINDOW && currentMin < 1080) return true
+  // End-of-day standdown — 17:30 to 17:45 (starts early so a full team finishes by 18:00)
+  if (currentMin >= 1050 && currentMin < 1050 + STANDUP_WINDOW) return true
 
   return false
 }
