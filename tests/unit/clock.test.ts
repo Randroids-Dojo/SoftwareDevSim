@@ -9,7 +9,7 @@ describe('createClock', () => {
     assert.equal(clock.hour, 9)
     assert.equal(clock.minute, 0)
     assert.equal(clock.paused, true)
-    assert.equal(clock.speed, 1)
+    assert.equal(clock.speed, 100)
   })
 })
 
@@ -24,8 +24,7 @@ describe('createClockTicker', () => {
 
   it('advances by 1 game minute per 60 real seconds at speed 1', () => {
     const tickClock = createClockTicker()
-    const clock = { ...createClock(), paused: false }
-    // Simulate 60 one-second ticks to accumulate 1 game minute
+    const clock = { ...createClock(), paused: false, speed: 1 }
     let current = clock
     let totalMinutes = 0
     for (let i = 0; i < 60; i++) {
@@ -39,8 +38,7 @@ describe('createClockTicker', () => {
 
   it('rolls over hours correctly', () => {
     const tickClock = createClockTicker()
-    const clock = { ...createClock(), paused: false, minute: 59 }
-    // 60 real seconds = 1 game minute at 1x, pushing 59 → 60 → rollover
+    const clock = { ...createClock(), paused: false, speed: 1, minute: 59 }
     let current = clock
     for (let i = 0; i < 60; i++) {
       const result = tickClock(current, 1)
@@ -52,8 +50,7 @@ describe('createClockTicker', () => {
 
   it('skips night — jumps from 6pm to 9am next day', () => {
     const tickClock = createClockTicker()
-    const clock = { ...createClock(), paused: false, hour: 17, minute: 59 }
-    // 60 real seconds = 1 game minute at 1x, pushing to 18:00 which triggers night skip
+    const clock = { ...createClock(), paused: false, speed: 1, hour: 17, minute: 59 }
     let current = clock
     for (let i = 0; i < 60; i++) {
       const result = tickClock(current, 1)
@@ -74,7 +71,7 @@ describe('createClockTicker', () => {
 
   it('accumulates fractional minutes across ticks', () => {
     const tickClock = createClockTicker()
-    const clock = { ...createClock(), paused: false }
+    const clock = { ...createClock(), paused: false, speed: 1 }
     // At 1x, each tick adds 1/60 of a minute. After 30 ticks we have 0.5 minutes (no advance yet)
     let current = clock
     let totalMinutes = 0

@@ -209,7 +209,7 @@ function HireTeamScreen({
     game.state.cash = cash - totalCost
     game.state.phase = 'running'
     game.state.clock.paused = false
-    game.state.clock.speed = 1
+    game.state.clock.speed = 100
 
     game.spawnWorkers(workers)
   }
@@ -291,7 +291,7 @@ function HireTeamScreen({
 
 // --- Sprint HUD (during auto-play) ---
 
-const SPEED_OPTIONS = [1, 2, 10, 20] as const
+const SPEED_OPTIONS = [50, 100, 250, 500] as const
 
 function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActions }) {
   const { sprint, progress, quality, chosenApp, team, clock } = snapshot
@@ -505,7 +505,7 @@ function EndScreen({ result, game }: { result: GameResult; game: GameActions }) 
     game.state.quality = 0
     game.state.result = null
     game.state.clock.paused = true
-    game.state.clock.speed = 1
+    game.state.clock.speed = 100
     game.state.clock.day = 1
     game.state.clock.hour = 9
     game.state.clock.minute = 0

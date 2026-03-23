@@ -9,7 +9,7 @@ export function createClock(): GameClock {
     hour: 9,
     minute: 0,
     paused: true,
-    speed: 1,
+    speed: 100,
   }
 }
 
