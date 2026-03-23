@@ -20,12 +20,11 @@ export function isStandupTime(clock: GameClock): boolean {
   return false
 }
 
-/** Assign desk names by worker index. Only 4 desks available. */
+/** Assign desk or overflow spot by worker index. Only 4 desks available. */
 function getDeskForWorker(workerId: string): string {
   const idx = parseInt(workerId.split('-')[1] ?? '0', 10)
   if (idx < 4) return `desk_${idx}`
-  // Overflow workers stand near whiteboard
-  return 'whiteboard'
+  return `overflow_${idx - 4}`
 }
 
 /** Get the standup circle slot for a worker. Each worker gets their own slot. */

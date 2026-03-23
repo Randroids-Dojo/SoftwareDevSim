@@ -123,9 +123,12 @@ describe('decideActivity', () => {
     assert.equal(decision.activity, 'idle')
   })
 
-  it('worker index > 3 gets whiteboard location', () => {
-    const decision = decideActivity(makeWorker('developer', { id: 'worker-5' }), makeClock())
-    assert.equal(decision.targetLocation, 'whiteboard')
+  it('worker index > 3 gets unique overflow location', () => {
+    const d5 = decideActivity(makeWorker('developer', { id: 'worker-5' }), makeClock())
+    const d6 = decideActivity(makeWorker('developer', { id: 'worker-6' }), makeClock())
+    assert.equal(d5.targetLocation, 'overflow_1')
+    assert.equal(d6.targetLocation, 'overflow_2')
+    assert.notEqual(d5.targetLocation, d6.targetLocation)
   })
 
   it('all roles go to standup at 9:00', () => {

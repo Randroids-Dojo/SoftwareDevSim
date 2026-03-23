@@ -248,6 +248,18 @@ export function createOffice(teamSize = 6): OfficeScene {
 
   const standupLocations = buildStandupCircle(teamSize)
 
+  // Overflow work spots for workers beyond the 4 desks — spaced along the back wall
+  const overflowLocations: NamedLocation[] = []
+  const maxOverflow = Math.max(0, teamSize - 4)
+  for (let i = 0; i < maxOverflow; i++) {
+    const x = 3 + ((i * 3) % 18) // spread across the room width
+    overflowLocations.push({
+      name: `overflow_${i}`,
+      position: [x, 0, 8 + Math.floor(i / 6) * 2],
+      seatDirection: [0, 0, 1],
+    })
+  }
+
   const locations: NamedLocation[] = [
     { name: 'desk_0', position: [3.5, 0, 1.5], seatDirection: [0, 0, 1] },
     { name: 'desk_1', position: [7.5, 0, 1.5], seatDirection: [0, 0, 1] },
@@ -256,6 +268,7 @@ export function createOffice(teamSize = 6): OfficeScene {
     { name: 'coffee', position: [22, 0, 14] },
     { name: 'meeting', position: [3, 0, 13] },
     { name: 'whiteboard', position: [12, 0, 14] },
+    ...overflowLocations,
     ...standupLocations,
   ]
 
