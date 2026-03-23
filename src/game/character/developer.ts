@@ -28,6 +28,7 @@ export class Developer {
   private animTime = 0
   private facing = 0
   private lastBubbleIndex = -1
+  private wasSpeaker = false
 
   // Target tracking — set by tick(), consumed by animate()
   private targetPosition: Vec3 | null = null
@@ -111,7 +112,7 @@ export class Developer {
   }
 
   /** Show or hide the chat bubble based on current activity and speaker turn. */
-  updateChatBubble(_dt: number, clock: GameClock, isSpeaker: boolean) {
+  updateChatBubble(clock: GameClock, isSpeaker: boolean) {
     const inStandup = this.state.currentActivity === 'standup'
 
     if (!inStandup || !isSpeaker) {
@@ -121,23 +122,23 @@ export class Developer {
       if (!inStandup) {
         this.lastBubbleIndex = -1
       }
+      this.wasSpeaker = false
       return
     }
 
-    const bubble = this.ensureChatBubble()
+    // Pick a fresh line when this developer first becomes the speaker
+    if (!this.wasSpeaker) {
+      this.wasSpeaker = true
+      this.lastBubbleIndex = -1
+    }
 
-    // Show a new line when this developer becomes the speaker
     if (this.lastBubbleIndex === -1) {
+      const bubble = this.ensureChatBubble()
       const lines = clock.hour < 12 ? STANDUP_LINES : STANDDOWN_LINES
       const idx = Math.floor(Math.random() * lines.length)
       this.lastBubbleIndex = idx
       bubble.show(lines[idx])
     }
-  }
-
-  /** Reset bubble state so a fresh line is picked next time this dev speaks. */
-  resetBubble() {
-    this.lastBubbleIndex = -1
   }
 
   /** Snap to target, apply facing, clear movement state so we stop re-evaluating. */

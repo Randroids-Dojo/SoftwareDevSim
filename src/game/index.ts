@@ -117,15 +117,12 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
     const standupActive = isStandupTime(state.clock) && workers.length > 0
     if (standupActive) {
       if (!standupWasActive) {
-        // Standup just started — reset to first speaker
         standupSpeakerIndex = 0
         standupSpeakerTimer = 0
-        for (const w of workers) w.resetBubble()
       }
       standupSpeakerTimer += dt
       if (standupSpeakerTimer >= SPEAKER_DURATION && standupSpeakerIndex < workers.length) {
         standupSpeakerTimer = 0
-        workers[standupSpeakerIndex]?.resetBubble()
         standupSpeakerIndex++
       }
     } else if (standupWasActive) {
@@ -139,7 +136,7 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
     for (let i = 0; i < workers.length; i++) {
       const worker = workers[i]
       worker.animate(dt)
-      worker.updateChatBubble(dt, state.clock, i === standupSpeakerIndex)
+      worker.updateChatBubble(state.clock, i === standupSpeakerIndex)
     }
 
     // Animate chairs
