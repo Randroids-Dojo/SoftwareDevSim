@@ -321,21 +321,22 @@ function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActi
       <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none">
         <div className="bg-gray-900/90 border-b border-gray-700/50 backdrop-blur-sm px-4 py-3">
           <div className="max-w-2xl mx-auto">
-            {/* App name + Sprint indicator row */}
+            {/* Title row: app name + sprint */}
+            <div className="flex items-center gap-3 mb-2">
+              {chosenApp && (
+                <span className="text-blue-400 font-semibold text-sm">{chosenApp.name}</span>
+              )}
+              <span className="text-gray-600 text-sm">|</span>
+              <span className="text-white font-bold">Sprint {sprintNum}</span>
+              <span className="text-gray-500 text-sm">of {sprint.total}</span>
+            </div>
+
+            {/* Controls row: day + speed + pause */}
             <div className="flex items-center justify-between mb-3">
+              <span className="text-gray-400 text-sm">
+                Day {sprint.dayInSprint + 1} / {sprint.daysPerSprint}
+              </span>
               <div className="flex items-center gap-3">
-                {chosenApp && (
-                  <span className="text-blue-400 font-semibold text-sm">{chosenApp.name}</span>
-                )}
-                <span className="text-gray-600 text-sm">|</span>
-                <span className="text-white font-bold">Sprint {sprintNum}</span>
-                <span className="text-gray-500 text-sm">of {sprint.total}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-gray-400 text-sm">
-                  Day {sprint.dayInSprint + 1} / {sprint.daysPerSprint}
-                </span>
-                {/* Speed controls */}
                 <div className="flex items-center pointer-events-auto">
                   {SPEED_OPTIONS.map((s) => (
                     <button
@@ -351,7 +352,6 @@ function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActi
                     </button>
                   ))}
                 </div>
-                {/* Pause / Resume button */}
                 <button
                   onClick={togglePause}
                   className={`pointer-events-auto px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${

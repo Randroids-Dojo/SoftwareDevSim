@@ -1,6 +1,6 @@
 import { createRenderer } from './renderer'
 import { Developer } from './character/developer'
-import { createClock, tickClock } from './simulation/clock'
+import { createClock, createClockTicker } from './simulation/clock'
 import { calculateSprintProgress, calculateQuality, calculateResult } from './scoring'
 import { isStandupTime } from './character/schedule'
 import type { AppChoice, GameInstance, GameState, WorkerState } from './types'
@@ -100,6 +100,7 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
   gameRenderer.setScreenGlow(true)
   gameRenderer.setBuildLight('green')
 
+  const tickClock = createClockTicker()
   let clockAccumulator = 0
   const TICK_INTERVAL = 1 // 1 real second per tick
 

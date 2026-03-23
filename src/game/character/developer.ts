@@ -27,7 +27,6 @@ export class Developer {
 
   private animTime = 0
   private facing = 0
-  private lastBubbleIndex = -1
   private wasSpeaker = false
 
   // Target tracking — set by tick(), consumed by animate()
@@ -119,24 +118,15 @@ export class Developer {
       if (this.chatBubble?.visible) {
         this.chatBubble.hide()
       }
-      if (!inStandup) {
-        this.lastBubbleIndex = -1
-      }
       this.wasSpeaker = false
       return
     }
 
-    // Pick a fresh line when this developer first becomes the speaker
     if (!this.wasSpeaker) {
       this.wasSpeaker = true
-      this.lastBubbleIndex = -1
-    }
-
-    if (this.lastBubbleIndex === -1) {
       const bubble = this.ensureChatBubble()
       const lines = clock.hour < 12 ? STANDUP_LINES : STANDDOWN_LINES
       const idx = Math.floor(Math.random() * lines.length)
-      this.lastBubbleIndex = idx
       bubble.show(lines[idx])
     }
   }
