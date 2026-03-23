@@ -35,15 +35,15 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
       break
 
     case 'type':
-      // Seated typing - arms move quickly, small movements
-      character.leftArm.rotation.x = 0.8 + Math.sin(t * 6) * 0.1
-      character.rightArm.rotation.x = 0.8 + Math.sin(t * 6 + 1) * 0.1
+      // Seated typing - arms reach forward to keyboard
+      character.leftArm.rotation.x = 1.0 + Math.sin(t * 6) * 0.1
+      character.rightArm.rotation.x = 1.0 + Math.sin(t * 6 + 1) * 0.1
       character.leftLeg.rotation.x = Math.PI / 2
       character.rightLeg.rotation.x = Math.PI / 2
-      character.body.position.y = 0.6
-      character.head.position.y = 1.4
-      character.leftArm.position.y = 1.25
-      character.rightArm.position.y = 1.25
+      character.body.position.y = 0.7
+      character.head.position.y = 1.5
+      character.leftArm.position.y = 1.35
+      character.rightArm.position.y = 1.35
       character.head.rotation.y = Math.sin(t * 0.2) * 0.05
       // Slight lean forward
       character.head.rotation.x = -0.1
@@ -87,10 +87,10 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
       character.rightArm.rotation.set(0.3, 0, 0)
       character.leftLeg.rotation.x = Math.PI / 2
       character.rightLeg.rotation.x = Math.PI / 2
-      character.body.position.y = 0.6
-      character.head.position.y = 1.4
-      character.leftArm.position.y = 1.25
-      character.rightArm.position.y = 1.25
+      character.body.position.y = 0.7
+      character.head.position.y = 1.5
+      character.leftArm.position.y = 1.35
+      character.rightArm.position.y = 1.35
       character.head.rotation.x = 0
       character.head.rotation.y = Math.sin(t * 0.3) * 0.1
       break

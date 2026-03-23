@@ -32,30 +32,30 @@ function buildDesk(
   x: number,
   z: number,
 ): { screen: THREE.Mesh; chair: THREE.Group } {
-  // Desktop surface
-  box(group, [x, 0.9, z], [3, 0.15, 2], PALETTE.deskTop)
+  // Desktop surface (lowered slightly for comfortable typing posture)
+  box(group, [x, 0.8, z], [3, 0.15, 2], PALETTE.deskTop)
   // Legs
-  box(group, [x, 0, z], [0.2, 0.9, 0.2], PALETTE.deskLegs)
-  box(group, [x + 2.8, 0, z], [0.2, 0.9, 0.2], PALETTE.deskLegs)
-  box(group, [x, 0, z + 1.8], [0.2, 0.9, 0.2], PALETTE.deskLegs)
-  box(group, [x + 2.8, 0, z + 1.8], [0.2, 0.9, 0.2], PALETTE.deskLegs)
+  box(group, [x, 0, z], [0.2, 0.8, 0.2], PALETTE.deskLegs)
+  box(group, [x + 2.8, 0, z], [0.2, 0.8, 0.2], PALETTE.deskLegs)
+  box(group, [x, 0, z + 1.8], [0.2, 0.8, 0.2], PALETTE.deskLegs)
+  box(group, [x + 2.8, 0, z + 1.8], [0.2, 0.8, 0.2], PALETTE.deskLegs)
 
   // Monitor
-  box(group, [x + 0.8, 1.05, z + 1.2], [1.4, 1.0, 0.1], PALETTE.monitorFrame)
-  const screen = box(group, [x + 0.9, 1.15, z + 1.19], [1.2, 0.8, 0.1], PALETTE.monitorScreen)
+  box(group, [x + 0.8, 0.95, z + 1.2], [1.4, 1.0, 0.1], PALETTE.monitorFrame)
+  const screen = box(group, [x + 0.9, 1.05, z + 1.19], [1.2, 0.8, 0.1], PALETTE.monitorScreen)
   // Monitor stand
-  box(group, [x + 1.3, 1.05, z + 1.0], [0.4, 0.05, 0.4], PALETTE.monitorFrame)
+  box(group, [x + 1.3, 0.95, z + 1.0], [0.4, 0.05, 0.4], PALETTE.monitorFrame)
 
-  // Keyboard
-  box(group, [x + 0.8, 1.07, z + 0.4], [1.2, 0.05, 0.4], PALETTE.keyboard)
+  // Keyboard (moved closer to desk edge for character reach)
+  box(group, [x + 0.8, 0.97, z + 0.15], [1.2, 0.05, 0.4], PALETTE.keyboard)
 
-  // Chair — as a separate group so it can slide in/out
+  // Chair — as a separate group so it can slide in/out (raised slightly)
   const chair = new THREE.Group()
-  box(chair, [x + 1.1, 0, z - 0.8], [0.8, 1.2, 0.1], PALETTE.chair)
-  box(chair, [x + 1.1, 0.35, z - 0.7], [0.8, 0.15, 0.5], PALETTE.chairSeat)
+  box(chair, [x + 1.1, 0, z - 0.8], [0.8, 1.3, 0.1], PALETTE.chair)
+  box(chair, [x + 1.1, 0.45, z - 0.7], [0.8, 0.15, 0.5], PALETTE.chairSeat)
   // Front legs
-  box(chair, [x + 1.1, 0, z - 0.3], [0.1, 0.35, 0.1], PALETTE.chair)
-  box(chair, [x + 1.8, 0, z - 0.3], [0.1, 0.35, 0.1], PALETTE.chair)
+  box(chair, [x + 1.1, 0, z - 0.3], [0.1, 0.45, 0.1], PALETTE.chair)
+  box(chair, [x + 1.8, 0, z - 0.3], [0.1, 0.45, 0.1], PALETTE.chair)
   group.add(chair)
 
   return { screen, chair }
