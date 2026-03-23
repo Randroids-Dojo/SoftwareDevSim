@@ -291,7 +291,12 @@ function HireTeamScreen({
 
 // --- Sprint HUD (during auto-play) ---
 
-const SPEED_OPTIONS = [50, 100, 250, 500] as const
+const SPEED_OPTIONS = [
+  { speed: 50, label: '\u203A', title: 'Slow' },
+  { speed: 100, label: '\u00BB', title: 'Normal' },
+  { speed: 250, label: '\u00BB\u203A', title: 'Fast' },
+  { speed: 500, label: '\u00BB\u00BB', title: 'Very Fast' },
+] as const
 
 function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActions }) {
   const { sprint, progress, quality, chosenApp, team, clock } = snapshot
@@ -338,17 +343,18 @@ function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActi
               </span>
               <div className="flex items-center gap-3">
                 <div className="flex items-center pointer-events-auto">
-                  {SPEED_OPTIONS.map((s) => (
+                  {SPEED_OPTIONS.map((opt) => (
                     <button
-                      key={s}
-                      onClick={() => setSpeed(s)}
+                      key={opt.speed}
+                      onClick={() => setSpeed(opt.speed)}
+                      title={opt.title}
                       className={`px-2.5 py-1.5 text-xs font-semibold transition-colors first:rounded-l-md last:rounded-r-md border-r border-gray-600 last:border-r-0 ${
-                        clock.speed === s
+                        clock.speed === opt.speed
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-700 hover:bg-gray-600 text-gray-400'
                       }`}
                     >
-                      {s}x
+                      {opt.label}
                     </button>
                   ))}
                 </div>
