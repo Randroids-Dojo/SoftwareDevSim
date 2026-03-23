@@ -6,18 +6,24 @@ export type ScheduleDecision = {
 }
 
 /**
- * Standup: 9:00–11:00.  Standdown: 15:30–18:00.
+ * Standup & standdown windows scale with game speed so ceremonies
+ * last roughly the same real-world duration (~4-5 seconds) regardless
+ * of speed.
  *
- * Windows are wide so the ceremonies are visible at 20x game speed.
- * At 20× each tick jumps ~100 game-minutes; these windows guarantee
- * at least 2 ticks land inside each ceremony.
+ * At speed 1 each tick = 5 game-min → 20-min window = 4 real seconds.
+ * At speed 20 each tick = 100 game-min → 120-min window ≈ 1.2 real seconds.
  */
 export function isStandupTime(clock: GameClock): boolean {
-  // Morning standup — first 2 hours
-  if (clock.hour >= 9 && clock.hour < 11) return true
-  // End-of-day standdown — last ~2.5 hours (before 18:00 end of work)
-  if (clock.hour >= 16 && clock.hour < 18) return true
-  if (clock.hour === 15 && clock.minute >= 30) return true
+  // Scale window: 20 min at 1x up to 120 min at 20x
+  const windowMinutes = Math.min(120, Math.max(20, 20 * clock.speed))
+  const currentMin = clock.hour * 60 + clock.minute
+
+  // Morning standup — starts at 9:00
+  if (currentMin >= 540 && currentMin < 540 + windowMinutes) return true
+
+  // End-of-day standdown — ends at 18:00 (1080)
+  if (currentMin >= 1080 - windowMinutes && currentMin < 1080) return true
+
   return false
 }
 

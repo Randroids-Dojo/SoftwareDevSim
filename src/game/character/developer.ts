@@ -16,8 +16,9 @@ const ACTIVITY_TO_ANIMATION: Record<ActivityState, AnimationName> = {
   standup: 'talk',
 }
 
-/** Base movement speed in units per second (scaled by clock speed at runtime). */
-const FRAME_MOVE_SPEED = 3
+/** Base movement speed in units per second. Speed scaling is capped so
+ *  characters cross the room in 1-2 seconds at any game speed. */
+const FRAME_MOVE_SPEED = 8
 
 /** Seconds between chat bubble text changes during standup. */
 const BUBBLE_CHANGE_INTERVAL = 3
@@ -86,7 +87,7 @@ export class Developer {
       if (dist > 0.5) {
         this.state.currentActivity = transition(this.state.currentActivity, 'moving')
         this.facing = facingAngle(this.state.position, this.targetPosition)
-        const speed = FRAME_MOVE_SPEED * dt * Math.max(1, this.clockSpeed)
+        const speed = FRAME_MOVE_SPEED * dt * Math.min(Math.max(1, this.clockSpeed), 5)
         const result = moveToward(this.state.position, this.targetPosition, speed)
         this.state.position = result.position
 
