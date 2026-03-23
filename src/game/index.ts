@@ -114,7 +114,9 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
 
   gameRenderer.onFrame((dt) => {
     // Update standup turn coordination
-    const standupActive = isStandupTime(state.clock) && workers.length > 0
+    const standupTriggered = isStandupTime(state.clock) && workers.length > 0
+    const speakersRemain = standupSpeakerIndex >= 0 && standupSpeakerIndex < workers.length
+    const standupActive = standupTriggered || speakersRemain
     if (standupActive) {
       if (!standupWasActive) {
         standupSpeakerIndex = 0
@@ -126,7 +128,6 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
         standupSpeakerIndex++
       }
     } else if (standupWasActive) {
-      // Standup just ended — reset
       standupSpeakerIndex = -1
       standupSpeakerTimer = 0
     }
@@ -164,8 +165,10 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
 
     if (minutesElapsed === 0) return
 
-    // Tick worker AI
+    // Tick worker AI (skip while standup meeting is still in progress)
     for (const worker of workers) {
+      const meetingExtended = standupSpeakerIndex >= 0 && standupSpeakerIndex < workers.length
+      if (meetingExtended && worker.state.currentActivity === 'standup') continue
       worker.tick(state.clock, gameRenderer.office.locations)
       // Sync state back
       const idx = state.team.findIndex((w) => w.id === worker.state.id)
