@@ -97,6 +97,77 @@ function buildMeetingArea(group: THREE.Group) {
   }
 }
 
+export interface WallClock {
+  minuteHand: THREE.Group
+  hourHand: THREE.Group
+}
+
+function buildWallClock(group: THREE.Group): WallClock {
+  const cx = 18, cy = 5.5, cz = 15.25
+  const radius = 0.7
+
+  // Clock face (circle facing -z)
+  const faceGeo = new THREE.CircleGeometry(radius, 32)
+  const faceMat = new THREE.MeshLambertMaterial({ color: PALETTE.whiteboard })
+  const face = new THREE.Mesh(faceGeo, faceMat)
+  face.position.set(cx, cy, cz)
+  face.rotation.y = Math.PI // face toward camera (-z)
+  group.add(face)
+
+  // Rim
+  const rimGeo = new THREE.RingGeometry(radius - 0.03, radius + 0.04, 32)
+  const rimMat = new THREE.MeshLambertMaterial({ color: PALETTE.monitorFrame, side: THREE.DoubleSide })
+  const rim = new THREE.Mesh(rimGeo, rimMat)
+  rim.position.set(cx, cy, cz - 0.01)
+  rim.rotation.y = Math.PI
+  group.add(rim)
+
+  // Hour markers (12 small ticks)
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2
+    const inner = radius - 0.12
+    const outer = radius - 0.05
+    const mx = Math.sin(angle)
+    const my = Math.cos(angle)
+    const tickGeo = new THREE.BoxGeometry(0.03, outer - inner, 0.02)
+    const tickMat = new THREE.MeshLambertMaterial({ color: PALETTE.monitorFrame })
+    const tick = new THREE.Mesh(tickGeo, tickMat)
+    tick.position.set(
+      cx - mx * (inner + (outer - inner) / 2),
+      cy + my * (inner + (outer - inner) / 2),
+      cz - 0.02,
+    )
+    tick.rotation.z = -angle
+    group.add(tick)
+  }
+
+  // Center dot
+  const dotGeo = new THREE.CircleGeometry(0.04, 16)
+  const dotMat = new THREE.MeshLambertMaterial({ color: PALETTE.monitorFrame })
+  const dot = new THREE.Mesh(dotGeo, dotMat)
+  dot.position.set(cx, cy, cz - 0.03)
+  dot.rotation.y = Math.PI
+  group.add(dot)
+
+  // Hands — each in a group so rotation pivots at the base
+  function makeHand(length: number, width: number): THREE.Group {
+    const handGroup = new THREE.Group()
+    handGroup.position.set(cx, cy, cz - 0.03)
+    const geo = new THREE.BoxGeometry(width, length, 0.02)
+    const mat = new THREE.MeshLambertMaterial({ color: PALETTE.monitorFrame })
+    const mesh = new THREE.Mesh(geo, mat)
+    mesh.position.set(0, length / 2, 0) // offset so base is at origin
+    handGroup.add(mesh)
+    group.add(handGroup)
+    return handGroup
+  }
+
+  const hourHand = makeHand(0.32, 0.05)
+  const minuteHand = makeHand(0.5, 0.035)
+
+  return { minuteHand, hourHand }
+}
+
 function buildPlant(group: THREE.Group, x: number, z: number) {
   box(group, [x, 0, z], [0.6, 0.8, 0.6], PALETTE.plantPot)
   box(group, [x - 0.1, 0.8, z - 0.1], [0.8, 1.0, 0.8], PALETTE.plant)
@@ -105,6 +176,7 @@ function buildPlant(group: THREE.Group, x: number, z: number) {
 export interface OfficeScene {
   group: THREE.Group
   buildLight: THREE.Mesh
+  wallClock: WallClock
   locations: NamedLocation[]
   screenMeshes: THREE.Mesh[]
   chairGroups: THREE.Group[]
@@ -133,6 +205,7 @@ export function createOffice(): OfficeScene {
 
   buildWhiteboard(group)
   const buildLight = buildBuildLight(group)
+  const wallClock = buildWallClock(group)
   buildCoffeeMachine(group)
   buildMeetingArea(group)
 
@@ -170,5 +243,5 @@ export function createOffice(): OfficeScene {
     ...standupLocations,
   ]
 
-  return { group, buildLight, locations, screenMeshes, chairGroups }
+  return { group, buildLight, wallClock, locations, screenMeshes, chairGroups }
 }

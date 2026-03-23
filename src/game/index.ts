@@ -150,6 +150,13 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
       chair.position.z += (targetZ - chair.position.z) * Math.min(1, dt * 5)
     }
 
+    // Update wall clock hands based on game time
+    const { hour, minute } = state.clock
+    const minuteAngle = (minute / 60) * Math.PI * 2
+    const hourAngle = (((hour % 12) + minute / 60) / 12) * Math.PI * 2
+    gameRenderer.office.wallClock.minuteHand.rotation.z = -minuteAngle
+    gameRenderer.office.wallClock.hourHand.rotation.z = -hourAngle
+
     if (state.clock.paused || state.phase !== 'running') return
 
     clockAccumulator += dt

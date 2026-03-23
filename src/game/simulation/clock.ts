@@ -41,9 +41,12 @@ export function createClockTicker() {
       hour++
     }
 
-    while (hour >= 24) {
-      hour -= 24
+    // Skip night: jump from 6pm to 9am next day
+    if (hour >= 18) {
+      hour = 9
+      minute = 0
       day++
+      partialMinutes = 0
     }
 
     return {

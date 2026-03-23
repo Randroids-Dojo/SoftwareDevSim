@@ -50,16 +50,17 @@ describe('createClockTicker', () => {
     assert.equal(current.minute, 0)
   })
 
-  it('rolls over days correctly', () => {
+  it('skips night — jumps from 6pm to 9am next day', () => {
     const tickClock = createClockTicker()
-    const clock = { ...createClock(), paused: false, hour: 23, minute: 59 }
+    const clock = { ...createClock(), paused: false, hour: 17, minute: 59 }
+    // 60 real seconds = 1 game minute at 1x, pushing to 18:00 which triggers night skip
     let current = clock
     for (let i = 0; i < 60; i++) {
       const result = tickClock(current, 1)
       current = result.clock
     }
     assert.equal(current.day, 2)
-    assert.equal(current.hour, 0)
+    assert.equal(current.hour, 9)
     assert.equal(current.minute, 0)
   })
 
