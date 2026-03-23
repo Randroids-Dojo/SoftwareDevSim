@@ -2,6 +2,7 @@ import { createRenderer } from './renderer'
 import { Developer } from './character/developer'
 import { createClock, tickClock } from './simulation/clock'
 import { calculateSprintProgress, calculateQuality, calculateResult } from './scoring'
+import { isStandupTime } from './character/schedule'
 import type { AppChoice, GameInstance, GameState, WorkerState } from './types'
 
 // --- Constants ---
@@ -105,11 +106,40 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
   // How far the chair slides out to let the character pass
   const CHAIR_SLIDE_DIST = -0.6
 
+  // Standup turn tracker — one speaker at a time
+  let standupSpeakerIndex = -1 // -1 = no standup active
+  let standupSpeakerTimer = 0
+  const SPEAKER_DURATION = 3 // seconds per speaker
+  let standupWasActive = false
+
   gameRenderer.onFrame((dt) => {
+    // Update standup turn coordination
+    const standupActive = isStandupTime(state.clock) && workers.length > 0
+    if (standupActive) {
+      if (!standupWasActive) {
+        // Standup just started — reset to first speaker
+        standupSpeakerIndex = 0
+        standupSpeakerTimer = 0
+        for (const w of workers) w.resetBubble()
+      }
+      standupSpeakerTimer += dt
+      if (standupSpeakerTimer >= SPEAKER_DURATION && standupSpeakerIndex < workers.length) {
+        standupSpeakerTimer = 0
+        workers[standupSpeakerIndex]?.resetBubble()
+        standupSpeakerIndex++
+      }
+    } else if (standupWasActive) {
+      // Standup just ended — reset
+      standupSpeakerIndex = -1
+      standupSpeakerTimer = 0
+    }
+    standupWasActive = standupActive
+
     // Animate characters every frame
-    for (const worker of workers) {
+    for (let i = 0; i < workers.length; i++) {
+      const worker = workers[i]
       worker.animate(dt)
-      worker.updateChatBubble(dt, state.clock)
+      worker.updateChatBubble(dt, state.clock, i === standupSpeakerIndex)
     }
 
     // Animate chairs
