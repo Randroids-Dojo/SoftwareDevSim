@@ -64,8 +64,18 @@ export class Developer {
 
     const targetLoc = findLocation(locations, decision.targetLocation)
     if (targetLoc) {
-      this.targetPosition = targetLoc.position
-      this.targetSeatDirection = targetLoc.seatDirection ?? null
+      // Only start moving if we aren't already at this location
+      const dist = Math.hypot(
+        targetLoc.position[0] - this.state.position[0],
+        targetLoc.position[2] - this.state.position[2],
+      )
+      if (dist > 0.5) {
+        this.targetPosition = targetLoc.position
+        this.targetSeatDirection = targetLoc.seatDirection ?? null
+      } else {
+        // Already here — just update activity without triggering movement
+        this.state.currentActivity = transition(this.state.currentActivity, decision.activity)
+      }
     } else {
       this.targetPosition = null
       this.targetSeatDirection = null
