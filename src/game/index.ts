@@ -154,8 +154,8 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
     const { hour, minute } = state.clock
     const minuteAngle = (minute / 60) * Math.PI * 2
     const hourAngle = (((hour % 12) + minute / 60) / 12) * Math.PI * 2
-    gameRenderer.office.wallClock.minuteHand.rotation.z = -minuteAngle
-    gameRenderer.office.wallClock.hourHand.rotation.z = -hourAngle
+    gameRenderer.office.wallClock.minuteHand.rotation.z = minuteAngle
+    gameRenderer.office.wallClock.hourHand.rotation.z = hourAngle
 
     if (state.clock.paused || state.phase !== 'running') return
 
