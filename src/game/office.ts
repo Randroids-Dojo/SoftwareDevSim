@@ -201,6 +201,23 @@ export function buildStandupCircle(teamSize: number): NamedLocation[] {
   return locations
 }
 
+const DESK_COUNT = 4
+
+/** Generate overflow work spots for workers beyond the 4 desks. */
+export function buildOverflowSpots(teamSize: number): NamedLocation[] {
+  const count = Math.max(0, teamSize - DESK_COUNT)
+  const locations: NamedLocation[] = []
+  for (let i = 0; i < count; i++) {
+    const x = 3 + ((i * 3) % 18)
+    locations.push({
+      name: `overflow_${i}`,
+      position: [x, 0, 8 + Math.floor(i / 6) * 2],
+      seatDirection: [0, 0, 1],
+    })
+  }
+  return locations
+}
+
 function buildPlant(group: THREE.Group, x: number, z: number) {
   box(group, [x, 0, z], [0.6, 0.8, 0.6], PALETTE.plantPot)
   box(group, [x - 0.1, 0.8, z - 0.1], [0.8, 1.0, 0.8], PALETTE.plant)
@@ -248,17 +265,7 @@ export function createOffice(teamSize = 6): OfficeScene {
 
   const standupLocations = buildStandupCircle(teamSize)
 
-  // Overflow work spots for workers beyond the 4 desks — spaced along the back wall
-  const overflowLocations: NamedLocation[] = []
-  const maxOverflow = Math.max(0, teamSize - 4)
-  for (let i = 0; i < maxOverflow; i++) {
-    const x = 3 + ((i * 3) % 18) // spread across the room width
-    overflowLocations.push({
-      name: `overflow_${i}`,
-      position: [x, 0, 8 + Math.floor(i / 6) * 2],
-      seatDirection: [0, 0, 1],
-    })
-  }
+  const overflowLocations = buildOverflowSpots(teamSize)
 
   const locations: NamedLocation[] = [
     { name: 'desk_0', position: [3.5, 0, 1.5], seatDirection: [0, 0, 1] },

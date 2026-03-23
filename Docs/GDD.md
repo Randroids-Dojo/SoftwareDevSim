@@ -133,14 +133,24 @@ idle, moving, working (typing), meeting (talking), break (drinking coffee), stan
 
 Once per day, the entire team gathers for two brief ceremonies:
 
-- **Standup (9:00–11:00):** All workers walk to the whiteboard area and form a circle. They play a talk animation and show speech bubbles with standup-style updates ("Working on the API", "PR needs review", "Tests are green!").
-- **Standdown (15:30–18:00):** Same gathering at end of day, with wrap-up messages ("Good progress today!", "Let's ship it tomorrow", "Done for today!").
+- **Standup (9:00–9:15 trigger window):** All workers walk to the whiteboard area and form a circle. One speaker at a time presents for 5 game-minutes, showing speech bubbles with standup-style updates.
+- **Standdown (17:00–17:15 trigger window):** Same gathering at end of day, with wrap-up messages.
 
-Windows are deliberately wide so the ceremonies remain visible at 20× game speed, where each tick jumps ~100 game minutes. Movement is per-frame (60fps) and scales with clock speed so characters walk briskly at fast-forward.
+Speaker turns last 5 game-minutes each (= 5 real minutes at 1×, scales with game speed). Meetings are hard-capped at 1 game-hour — remaining speakers are skipped if the cap is hit. Larger teams spend more of the work day in ceremonies.
 
-After each ceremony, workers return to their desks and sit down. Workers with critically low energy (< 5%) skip standup for a coffee break.
+After each ceremony, workers return to their desks/overflow spots. Workers with critically low energy (< 5%) skip standup for a coffee break.
 
-Circle positions are generated dynamically around the whiteboard (6 slots, radius 1.8 units, center at [12, 0, 12]).
+Circle positions use concentric rings (6 per ring, 1.8 base radius, 1.4 spacing between rings) centered at [12, 0, 12]. Rings expand automatically to fit the team size.
+
+### Game Clock & Speed
+
+The game clock runs at real time: 1× speed = 1 real minute per game minute. The work day is 9am–6pm (9 hours). Night hours are skipped — the clock jumps from 6pm to 9am the next day.
+
+Speed options: 50× (Slow), 100× (Normal, default), 250× (Fast), 500× (Very Fast). An analog wall clock on the office back wall shows the current game time.
+
+### Overflow Workers
+
+Only 4 physical desks exist. Workers beyond index 3 are assigned unique `overflow_N` positions spread across the room in a grid pattern. All dynamic locations (standup circle + overflow spots) are rebuilt when workers spawn to match the actual team size.
 
 ---
 
@@ -169,16 +179,17 @@ GameState:   phase, cash, chosenApp, team[], sprint, clock,
 
 ### Game Clock
 
-- 1 real second = 5 game minutes (base rate)
-- During auto-play: 20x speed (1 real second = 100 game minutes)
-- Work hours: 9am-6pm
+- Base rate: 1× = real time (1 real minute = 1 game minute)
+- Default speed: 100× (1 real second ≈ 1.67 game minutes)
+- Speed options: 50×, 100×, 250×, 500×
+- Work hours: 9am–6pm (night skipped automatically)
 - Sprint length: 5 game days
 - Total: 4 sprints = 20 game days
 
 ### Sprint Progression
 
 Progress and quality are calculated once per sprint completion (not per-tick). Each sprint:
-1. Clock ticks at 20x speed
+1. Clock ticks at selected speed (default 100×)
 2. Workers animate based on role (devs type, POs visit whiteboard, managers hold meetings)
 3. After 5 game days: sprint completes, progress/quality updated
 4. After 4 sprints: result calculated, end screen shown
