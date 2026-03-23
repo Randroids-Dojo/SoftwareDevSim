@@ -123,7 +123,7 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
         standupSpeakerIndex = 0
         standupSpeakerTimer = 0
       }
-      standupSpeakerTimer += dt
+      standupSpeakerTimer += dt * state.clock.speed
       if (standupSpeakerTimer >= SPEAKER_DURATION && standupSpeakerIndex < workers.length) {
         standupSpeakerTimer = 0
         standupSpeakerIndex++
