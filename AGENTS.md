@@ -192,6 +192,13 @@ The character mesh (in `src/game/character/mesh.ts`) is built facing **-Z** (eye
 - **`seatDirection`** on `NamedLocation` defines the world-space direction the character should face when seated. The facing angle is computed as `atan2(dir.x, dir.z)` and the PI offset is added in `syncMeshPosition`.
 - **`facingAngle(from, to)`** returns the Y rotation for walking toward a target. The PI offset in `syncMeshPosition` handles the mesh-to-world conversion — do not add extra offsets in animation code.
 
+### Wall-mounted objects (clock, signs, etc.)
+
+Objects on the back wall have their face rotated `rotation.y = Math.PI` so they point toward the camera (-Z). This **mirrors the X axis**, which reverses the sign of `rotation.z` from the viewer's perspective. When rotating hands, dials, or any child of a wall-mounted group:
+
+- **Clockwise rotation (as seen by the player) = positive `rotation.z`**, not negative.
+- Always sanity-check rotation direction visually before committing wall-mounted animation code.
+
 ### Checklist for animation changes
 
 1. Test sitting poses visually — legs must bend **toward** the desk, not away
