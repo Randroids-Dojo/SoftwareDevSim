@@ -14,8 +14,8 @@ export function isStandupTime(clock: GameClock): boolean {
   // Morning standup — 9:00 to 9:15
   if (currentMin >= 540 && currentMin < 540 + STANDUP_WINDOW) return true
 
-  // End-of-day standdown — 17:30 to 17:45 (starts early so a full team finishes by 18:00)
-  if (currentMin >= 1050 && currentMin < 1050 + STANDUP_WINDOW) return true
+  // End-of-day standdown — 17:00 to 17:15
+  if (currentMin >= 1020 && currentMin < 1020 + STANDUP_WINDOW) return true
 
   return false
 }

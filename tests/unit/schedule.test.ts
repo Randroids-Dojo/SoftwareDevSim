@@ -47,20 +47,20 @@ describe('isStandupTime', () => {
     assert.equal(isStandupTime(makeClock({ hour: 12, minute: 0 })), false)
   })
 
-  it('returns false at 17:29 (just before standdown)', () => {
-    assert.equal(isStandupTime(makeClock({ hour: 17, minute: 29 })), false)
+  it('returns false at 16:59 (just before standdown)', () => {
+    assert.equal(isStandupTime(makeClock({ hour: 16, minute: 59 })), false)
   })
 
-  it('returns true at 17:30 (standdown starts)', () => {
-    assert.equal(isStandupTime(makeClock({ hour: 17, minute: 30 })), true)
+  it('returns true at 17:00 (standdown starts)', () => {
+    assert.equal(isStandupTime(makeClock({ hour: 17, minute: 0 })), true)
   })
 
-  it('returns true at 17:44 (standdown in progress)', () => {
-    assert.equal(isStandupTime(makeClock({ hour: 17, minute: 44 })), true)
+  it('returns true at 17:14 (standdown in progress)', () => {
+    assert.equal(isStandupTime(makeClock({ hour: 17, minute: 14 })), true)
   })
 
-  it('returns false at 17:45 (standdown trigger window over)', () => {
-    assert.equal(isStandupTime(makeClock({ hour: 17, minute: 45 })), false)
+  it('returns false at 17:15 (standdown trigger window over)', () => {
+    assert.equal(isStandupTime(makeClock({ hour: 17, minute: 15 })), false)
   })
 
   it('window is fixed regardless of speed', () => {
@@ -137,8 +137,8 @@ describe('decideActivity', () => {
     }
   })
 
-  it('all roles go to standdown at 17:35', () => {
-    const clock = makeClock({ hour: 17, minute: 35 })
+  it('all roles go to standdown at 17:05', () => {
+    const clock = makeClock({ hour: 17, minute: 5 })
     for (const role of ['developer', 'designer', 'product_owner', 'manager'] as const) {
       const decision = decideActivity(makeWorker(role), clock)
       assert.equal(decision.activity, 'standup', `${role} should be in standdown`)
