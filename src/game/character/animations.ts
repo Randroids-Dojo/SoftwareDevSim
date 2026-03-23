@@ -36,8 +36,8 @@ export function applyAnimation(character: CharacterMesh, animation: AnimationNam
 
     case 'type':
       // Seated typing - arms reach forward and inward to keyboard homerow
-      character.leftArm.rotation.set(1.0 + Math.sin(t * 6) * 0.1, 0, -0.35)
-      character.rightArm.rotation.set(1.0 + Math.sin(t * 6 + 1) * 0.1, 0, 0.35)
+      character.leftArm.rotation.set(1.0 + Math.sin(t * 6) * 0.1, 0, 0.35)
+      character.rightArm.rotation.set(1.0 + Math.sin(t * 6 + 1) * 0.1, 0, -0.35)
       character.leftLeg.rotation.x = Math.PI / 2
       character.rightLeg.rotation.x = Math.PI / 2
       character.body.position.y = 0.7
