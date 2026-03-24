@@ -51,11 +51,11 @@ function buildDesk(
 
   // Chair — as a separate group so it can slide in/out (raised slightly)
   const chair = new THREE.Group()
-  box(chair, [x + 1.1, 0, z - 0.8], [0.8, 1.3, 0.1], PALETTE.chair)
-  box(chair, [x + 1.1, 0.45, z - 0.7], [0.8, 0.15, 0.5], PALETTE.chairSeat)
+  box(chair, [x + 1.1, 0, z - 0.6], [0.8, 1.3, 0.1], PALETTE.chair)
+  box(chair, [x + 1.1, 0.45, z - 0.5], [0.8, 0.15, 0.5], PALETTE.chairSeat)
   // Front legs
-  box(chair, [x + 1.1, 0, z - 0.3], [0.1, 0.45, 0.1], PALETTE.chair)
-  box(chair, [x + 1.8, 0, z - 0.3], [0.1, 0.45, 0.1], PALETTE.chair)
+  box(chair, [x + 1.1, 0, z - 0.1], [0.1, 0.45, 0.1], PALETTE.chair)
+  box(chair, [x + 1.8, 0, z - 0.1], [0.1, 0.45, 0.1], PALETTE.chair)
   group.add(chair)
 
   return { screen, chair }
