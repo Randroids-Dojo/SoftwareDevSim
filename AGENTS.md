@@ -82,6 +82,7 @@ Coverage thresholds (enforced in CI): **lines ≥ 90%**, **branches ≥ 80%**, *
 - Run `npm run test:coverage` before committing to check coverage thresholds
 - If a test fails, fix the code — do not weaken the assertion
 - If coverage drops below thresholds, add tests — do not lower the thresholds
+- **Line coverage is necessary but not sufficient.** Write tests that catch operator swaps, off-by-one errors, and removed conditions — not just happy paths. Use mutation testing to verify.
 
 ## Mutation Testing
 
@@ -95,7 +96,8 @@ Stryker targets the same game logic files as unit coverage. Configuration lives 
 
 ### Rules for agents
 
-- Run `npm run test:mutation` after adding or changing unit tests to verify test quality
+- **Whenever you touch a file covered by mutation testing**, run `npm run test:mutation` and actively kill surviving mutants before committing. Improving the mutation score is part of the definition of done — not a stretch goal.
+- When writing or updating unit tests, check the mutation report for the file you changed. Add boundary-value tests, negative tests, and assertions that catch off-by-one and operator-swap mutations.
 - If mutation score drops below the break threshold (50%), add stronger assertions — do not lower the threshold
 - Surviving mutants indicate weak test assertions — review the clear-text output to identify gaps
 - Do not add mutation testing to the pre-push checklist (it's too slow for every push); it runs in CI
