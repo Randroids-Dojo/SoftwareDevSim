@@ -20,6 +20,7 @@ npm run type-check   # TypeScript strict (noUnusedLocals + noUnusedParameters)
 npm run test:unit     # Unit tests (fast, no coverage)
 npm run test:coverage # Unit tests + coverage (lines≥90%, branches≥80%, functions≥90%)
 npm run test:smoke    # Smoke tests
+npm run test:mutation # Stryker mutation testing (~7 min)
 ```
 
 ## Task Tracking with .dots
@@ -81,6 +82,25 @@ Coverage thresholds (enforced in CI): **lines ≥ 90%**, **branches ≥ 80%**, *
 - Run `npm run test:coverage` before committing to check coverage thresholds
 - If a test fails, fix the code — do not weaken the assertion
 - If coverage drops below thresholds, add tests — do not lower the thresholds
+- **Line coverage is necessary but not sufficient.** Write tests that catch operator swaps, off-by-one errors, and removed conditions — not just happy paths. Use mutation testing to verify.
+
+## Mutation Testing
+
+Mutation testing uses [Stryker Mutator](https://stryker-mutator.io/) to verify test effectiveness by introducing small code changes (mutants) and checking that tests catch them.
+
+```bash
+npm run test:mutation  # Run Stryker mutation tests (~7 min)
+```
+
+Stryker targets the same game logic files as unit coverage. Configuration lives in `stryker.config.json`. Mutation score thresholds: **break at 50%**, low warning at 60%, high target at 80%. The HTML report is generated at `reports/mutation/mutation.html`.
+
+### Rules for agents
+
+- **Whenever you touch a file covered by mutation testing**, run `npm run test:mutation` and actively kill surviving mutants before committing. Improving the mutation score is part of the definition of done — not a stretch goal.
+- When writing or updating unit tests, check the mutation report for the file you changed. Add boundary-value tests, negative tests, and assertions that catch off-by-one and operator-swap mutations.
+- If mutation score drops below the break threshold (50%), add stronger assertions — do not lower the threshold
+- Surviving mutants indicate weak test assertions — review the clear-text output to identify gaps
+- Do not add mutation testing to the pre-push checklist (it's too slow for every push); it runs in CI
 
 ## Smoke Tests
 
@@ -134,6 +154,7 @@ All three checks must be clean before committing. CI runs `format:check`, `lint`
 - **CI** (`ci.yml`): Runs format:check + lint + type-check + test:coverage on PRs and pushes to main
 - **Smoke** (`smoke.yml`): Builds and runs smoke tests on PRs and pushes to main
 - **E2E** (`e2e.yml`): Runs Playwright E2E tests (chromium) on PRs and pushes to main
+- **Mutation** (`mutation.yml`): Runs Stryker mutation testing on PRs and pushes to main
 - **Deploy**: Vercel Git integration auto-deploys on push to main and creates preview deploys for PRs (no GitHub Actions workflow needed)
 
 ## Game Design

@@ -15,7 +15,8 @@
     "test:coverage": "npx tsx --test --experimental-test-coverage --test-coverage-include='src/game/scoring.ts' --test-coverage-include='src/game/simulation/**' --test-coverage-include='src/game/character/needs.ts' --test-coverage-include='src/game/character/schedule.ts' --test-coverage-include='src/game/character/stateMachine.ts' --test-coverage-include='src/game/character/pathfinder.ts' --test-coverage-include='src/lib/**' --test-coverage-lines=90 --test-coverage-branches=80 --test-coverage-functions=90 tests/unit/*.test.ts",
     "test:smoke": "npx tsx tests/smoke/smoke.test.ts",
     "test:e2e": "npx playwright test",
-    "test:e2e:headed": "npx playwright test --headed"
+    "test:e2e:headed": "npx playwright test --headed",
+    "test:mutation": "npx stryker run"
   },
   "dependencies": {
     "@upstash/redis": "^1.37.0",
@@ -29,6 +30,8 @@
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^9.0.0",
     "@playwright/test": "^1.58.2",
+    "@stryker-mutator/core": "^9.6.0",
+    "@stryker-mutator/typescript-checker": "^9.6.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

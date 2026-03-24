@@ -165,4 +165,78 @@ describe('decideActivity', () => {
     assert.equal(decision.activity, 'break')
     assert.equal(decision.targetLocation, 'coffee')
   })
+
+  it('energy exactly at 0.2 does not trigger break', () => {
+    const decision = decideActivity(makeWorker('developer', { energy: 0.2 }), makeClock())
+    assert.equal(decision.activity, 'working')
+  })
+
+  it('energy just below 0.2 triggers break', () => {
+    const decision = decideActivity(makeWorker('developer', { energy: 0.19 }), makeClock())
+    assert.equal(decision.activity, 'break')
+  })
+
+  it('energy exactly at 0.05 allows standup', () => {
+    const clock = makeClock({ hour: 9, minute: 5 })
+    const decision = decideActivity(makeWorker('developer', { energy: 0.05 }), clock)
+    assert.equal(decision.activity, 'standup')
+  })
+
+  it('energy just below 0.05 skips standup for break', () => {
+    const clock = makeClock({ hour: 9, minute: 5 })
+    const decision = decideActivity(makeWorker('developer', { energy: 0.04 }), clock)
+    assert.equal(decision.activity, 'break')
+  })
+
+  it('PO at minute 29 goes to whiteboard', () => {
+    const decision = decideActivity(makeWorker('product_owner'), makeClock({ minute: 29 }))
+    assert.equal(decision.activity, 'meeting')
+    assert.equal(decision.targetLocation, 'whiteboard')
+  })
+
+  it('PO at minute 30 works at desk', () => {
+    const decision = decideActivity(makeWorker('product_owner'), makeClock({ minute: 30 }))
+    assert.equal(decision.activity, 'working')
+  })
+
+  it('manager at minute 44 is in meeting', () => {
+    const decision = decideActivity(makeWorker('manager'), makeClock({ minute: 44 }))
+    assert.equal(decision.activity, 'meeting')
+  })
+
+  it('manager at minute 45 takes break', () => {
+    const decision = decideActivity(makeWorker('manager'), makeClock({ minute: 45 }))
+    assert.equal(decision.activity, 'break')
+  })
+
+  it('worker at hour 9 is working (not idle)', () => {
+    const decision = decideActivity(makeWorker('developer'), makeClock({ hour: 9, minute: 30 }))
+    assert.equal(decision.activity, 'working')
+  })
+
+  it('worker at hour 17 (non-standup) is working', () => {
+    const decision = decideActivity(makeWorker('developer'), makeClock({ hour: 17, minute: 30 }))
+    assert.equal(decision.activity, 'working')
+  })
+
+  it('worker at hour 18 is idle', () => {
+    const decision = decideActivity(makeWorker('developer'), makeClock({ hour: 18, minute: 0 }))
+    assert.equal(decision.activity, 'idle')
+  })
+
+  it('desk assignment uses worker id index', () => {
+    const d0 = decideActivity(makeWorker('developer', { id: 'worker-0' }), makeClock())
+    const d1 = decideActivity(makeWorker('developer', { id: 'worker-1' }), makeClock())
+    const d2 = decideActivity(makeWorker('developer', { id: 'worker-2' }), makeClock())
+    const d3 = decideActivity(makeWorker('developer', { id: 'worker-3' }), makeClock())
+    assert.equal(d0.targetLocation, 'desk_0')
+    assert.equal(d1.targetLocation, 'desk_1')
+    assert.equal(d2.targetLocation, 'desk_2')
+    assert.equal(d3.targetLocation, 'desk_3')
+  })
+
+  it('worker index 4 gets overflow_0', () => {
+    const d = decideActivity(makeWorker('developer', { id: 'worker-4' }), makeClock())
+    assert.equal(d.targetLocation, 'overflow_0')
+  })
 })
