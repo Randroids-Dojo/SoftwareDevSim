@@ -97,14 +97,28 @@ describe('createClockTicker', () => {
 })
 
 describe('isWorkHours', () => {
-  it('returns true during work hours (9-17)', () => {
+  it('returns true at start of work (hour 9)', () => {
     assert.equal(isWorkHours({ ...createClock(), hour: 9 }), true)
+  })
+
+  it('returns true at end of work (hour 17)', () => {
     assert.equal(isWorkHours({ ...createClock(), hour: 17 }), true)
   })
 
-  it('returns false outside work hours', () => {
+  it('returns true at midday (hour 12)', () => {
+    assert.equal(isWorkHours({ ...createClock(), hour: 12 }), true)
+  })
+
+  it('returns false just before work (hour 8)', () => {
     assert.equal(isWorkHours({ ...createClock(), hour: 8 }), false)
+  })
+
+  it('returns false just after work (hour 18)', () => {
     assert.equal(isWorkHours({ ...createClock(), hour: 18 }), false)
+  })
+
+  it('returns false at midnight (hour 0)', () => {
+    assert.equal(isWorkHours({ ...createClock(), hour: 0 }), false)
   })
 })
 
