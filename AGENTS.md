@@ -20,6 +20,7 @@ npm run type-check   # TypeScript strict (noUnusedLocals + noUnusedParameters)
 npm run test:unit     # Unit tests (fast, no coverage)
 npm run test:coverage # Unit tests + coverage (lines≥90%, branches≥80%, functions≥90%)
 npm run test:smoke    # Smoke tests
+npm run test:mutation # Stryker mutation testing (~7 min)
 ```
 
 ## Task Tracking with .dots
@@ -82,6 +83,23 @@ Coverage thresholds (enforced in CI): **lines ≥ 90%**, **branches ≥ 80%**, *
 - If a test fails, fix the code — do not weaken the assertion
 - If coverage drops below thresholds, add tests — do not lower the thresholds
 
+## Mutation Testing
+
+Mutation testing uses [Stryker Mutator](https://stryker-mutator.io/) to verify test effectiveness by introducing small code changes (mutants) and checking that tests catch them.
+
+```bash
+npm run test:mutation  # Run Stryker mutation tests (~7 min)
+```
+
+Stryker targets the same game logic files as unit coverage. Configuration lives in `stryker.config.json`. Mutation score thresholds: **break at 50%**, low warning at 60%, high target at 80%. The HTML report is generated at `reports/mutation/mutation.html`.
+
+### Rules for agents
+
+- Run `npm run test:mutation` after adding or changing unit tests to verify test quality
+- If mutation score drops below the break threshold (50%), add stronger assertions — do not lower the threshold
+- Surviving mutants indicate weak test assertions — review the clear-text output to identify gaps
+- Do not add mutation testing to the pre-push checklist (it's too slow for every push); it runs in CI
+
 ## Smoke Tests
 
 ```bash
@@ -134,6 +152,7 @@ All three checks must be clean before committing. CI runs `format:check`, `lint`
 - **CI** (`ci.yml`): Runs format:check + lint + type-check + test:coverage on PRs and pushes to main
 - **Smoke** (`smoke.yml`): Builds and runs smoke tests on PRs and pushes to main
 - **E2E** (`e2e.yml`): Runs Playwright E2E tests (chromium) on PRs and pushes to main
+- **Mutation** (`mutation.yml`): Runs Stryker mutation testing on PRs and pushes to main
 - **Deploy**: Vercel Git integration auto-deploys on push to main and creates preview deploys for PRs (no GitHub Actions workflow needed)
 
 ## Game Design
