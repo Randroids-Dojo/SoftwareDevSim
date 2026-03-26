@@ -268,10 +268,10 @@ export function createOffice(teamSize = 6): OfficeScene {
   const overflowLocations = buildOverflowSpots(teamSize)
 
   const locations: NamedLocation[] = [
-    { name: 'desk_0', position: [3.5, 0, 1.5], seatDirection: [0, 0, 1] },
-    { name: 'desk_1', position: [7.5, 0, 1.5], seatDirection: [0, 0, 1] },
-    { name: 'desk_2', position: [15.5, 0, 1.5], seatDirection: [0, 0, 1] },
-    { name: 'desk_3', position: [19.5, 0, 1.5], seatDirection: [0, 0, 1] },
+    { name: 'desk_0', position: [3.5, 0, 1.7], seatDirection: [0, 0, 1] },
+    { name: 'desk_1', position: [7.5, 0, 1.7], seatDirection: [0, 0, 1] },
+    { name: 'desk_2', position: [15.5, 0, 1.7], seatDirection: [0, 0, 1] },
+    { name: 'desk_3', position: [19.5, 0, 1.7], seatDirection: [0, 0, 1] },
     { name: 'coffee', position: [22, 0, 14] },
     { name: 'meeting', position: [3, 0, 13] },
     { name: 'whiteboard', position: [12, 0, 14] },
