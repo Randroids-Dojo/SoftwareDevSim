@@ -292,7 +292,7 @@ Free and open source.
 | Tooling | Prettier, ESLint strict, coverage thresholds, CI enforcement | Done |
 | Basic Game Loop | Choose app, hire team, auto-play 4 sprints, end screen with grading | Done |
 | Standup/Standdown | Daily team ceremonies with circle formation and chat bubbles | Done |
-| App Demo Preview | Live phone mockup showing the app being built, quality-dependent glitches | In Progress |
+| App Demo Preview | Live phone mockup showing the app being built, quality-dependent glitches | Done |
 
 ---
 
