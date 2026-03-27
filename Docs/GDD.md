@@ -96,6 +96,30 @@ The player has 4 sprints regardless. Simple apps are easy to complete; complex a
 - **1 dev, no PO/designer:** Low progress, low quality = likely D or F
 - **2 devs, 1 PO, 1 designer:** Solid team = B or A depending on app choice
 
+### Demo Day — App Preview
+
+A phone-screen mockup shows the app the team is building in real time. During sprints, the player can click "View App" to see a live preview that updates as completion and quality change. The same preview appears on the end screen as the final result. Completion and quality control what the player sees:
+
+**Completion controls feature visibility:**
+- < 40%: Blank screen with a spinner or "Coming Soon" placeholder
+- 40–69%: Core features only (1–2 screens partially built)
+- 70–99%: Most features present, some missing polish
+- 100%: Full app with all screens
+
+**Quality controls visual polish:**
+- Low quality (< 0.3): Broken layouts, misaligned elements, error modals, placeholder images, lorem ipsum text
+- Medium quality (0.3–0.6): Functional but rough — minor alignment issues, generic icons
+- High quality (> 0.6): Clean, polished UI with proper styling
+
+**Non-determinism:** The game seed selects which specific visual bugs appear from a pool of possible glitches per app. Each playthrough shows a different combination of issues at the same quality level.
+
+**Per-app mockup screens:**
+| App | Low Completion | Full Completion |
+|-----|---------------|-----------------|
+| Todo App | Empty task list with spinner | Full task list with categories, checkboxes, progress |
+| Fitness Tracker | Blank dashboard | Workout log, stats charts, activity rings |
+| E-Commerce Platform | "Under construction" page | Product grid, cart, checkout form |
+
 ---
 
 ## 4. World & Setting
@@ -268,6 +292,7 @@ Free and open source.
 | Tooling | Prettier, ESLint strict, coverage thresholds, CI enforcement | Done |
 | Basic Game Loop | Choose app, hire team, auto-play 4 sprints, end screen with grading | Done |
 | Standup/Standdown | Daily team ceremonies with circle formation and chat bubbles | Done |
+| App Demo Preview | Live phone mockup showing the app being built, quality-dependent glitches | In Progress |
 
 ---
 

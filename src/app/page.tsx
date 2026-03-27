@@ -1,12 +1,13 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import GameCanvas from '../components/GameCanvas'
 import FeedbackFab from '../components/FeedbackFab'
 import { useGameState } from '../hooks/useGameState'
 import type { GameActions } from '../game'
 import { APP_CHOICES, ROLE_SALARIES, ROLE_LABELS, STARTING_CASH, TOTAL_SPRINTS } from '../game'
 import type { AppChoice, GameResult, GameState, Role, WorkerState } from '../game/types'
+import AppDemoPreview from '../components/AppDemoPreview'
 
 // --- Name pools for hired workers ---
 const NAMES: Record<Role, string[]> = {
@@ -77,7 +78,12 @@ export default function Home() {
       )}
       {phase === 'running' && snapshot && game && <SprintOverlay snapshot={snapshot} game={game} />}
       {phase === 'ended' && snapshot?.result && game && (
-        <EndScreen result={snapshot.result} game={game} />
+        <EndScreen
+          result={snapshot.result}
+          game={game}
+          appId={snapshot.chosenApp?.id ?? ''}
+          seed={snapshot.seed}
+        />
       )}
     </main>
   )
@@ -299,10 +305,19 @@ const SPEED_OPTIONS = [
 ] as const
 
 function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActions }) {
-  const { sprint, progress, quality, chosenApp, team, clock } = snapshot
+  const { sprint, progress, quality, chosenApp, team, clock, seed } = snapshot
   const paused = clock.paused
   const sprintNum = sprint.current + 1
   const dayProgress = sprint.dayInSprint / sprint.daysPerSprint
+  const [showPreview, setShowPreview] = useState(false)
+
+  // Close preview when game ends
+  useEffect(() => {
+    if (snapshot.phase !== 'running') setShowPreview(false)
+  }, [snapshot.phase])
+
+  // Compute live completion from progress + app difficulty
+  const liveCompletion = chosenApp ? Math.min(1, progress / (chosenApp.estimatedSprints / 4)) : 0
 
   // Team composition summary
   const roleCounts = {
@@ -358,6 +373,16 @@ function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActi
                     </button>
                   ))}
                 </div>
+                <button
+                  onClick={() => setShowPreview((p) => !p)}
+                  className={`pointer-events-auto px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                    showPreview
+                      ? 'bg-purple-600 hover:bg-purple-500 text-white'
+                      : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                  }`}
+                >
+                  {showPreview ? 'Hide App' : 'View App'}
+                </button>
                 <button
                   onClick={togglePause}
                   className={`pointer-events-auto px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${
@@ -449,6 +474,18 @@ function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActi
         </div>
       </div>
 
+      {/* Live app preview panel */}
+      {showPreview && chosenApp && (
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 z-30 pointer-events-auto">
+          <AppDemoPreview
+            appId={chosenApp.id}
+            completion={liveCompletion}
+            quality={quality}
+            seed={seed}
+          />
+        </div>
+      )}
+
       {/* Paused overlay */}
       {paused && (
         <div className="absolute inset-0 z-20 pointer-events-none">
@@ -490,7 +527,17 @@ function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActi
 
 // --- End Screen ---
 
-function EndScreen({ result, game }: { result: GameResult; game: GameActions }) {
+function EndScreen({
+  result,
+  game,
+  appId,
+  seed,
+}: {
+  result: GameResult
+  game: GameActions
+  appId: string
+  seed: string
+}) {
   const gradeColors: Record<string, string> = {
     S: 'text-purple-400',
     A: 'text-emerald-400',
@@ -519,48 +566,66 @@ function EndScreen({ result, game }: { result: GameResult; game: GameActions }) 
   }
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/85 z-10 px-4">
-      <div className="max-w-md w-full">
-        {/* Grade */}
-        <div className="text-center mb-6">
-          <div className={`text-8xl font-black ${gradeColors[result.grade] ?? 'text-white'}`}>
-            {result.grade}
+    <div className="absolute inset-0 flex items-center justify-center bg-gray-900/85 z-10 px-4">
+      <div className="flex flex-col md:flex-row items-center gap-8 max-w-3xl w-full">
+        {/* App Demo Preview */}
+        {appId && (
+          <div className="flex-shrink-0">
+            <p className="text-gray-500 text-xs text-center mb-2 uppercase tracking-wider">
+              Your App
+            </p>
+            <AppDemoPreview
+              appId={appId}
+              completion={result.completion}
+              quality={result.quality}
+              seed={seed}
+            />
           </div>
-          <p className="text-gray-400 mt-2">{result.featuresShipped}</p>
-        </div>
+        )}
 
-        {/* Breakdown */}
-        <div className="bg-gray-800 border border-gray-700 rounded-lg p-5 mb-6">
-          <h3 className="text-white font-semibold mb-3">Results Breakdown</h3>
-          <div className="space-y-2 text-sm">
-            <Row label="Completion" value={`${Math.round(result.completion * 100)}%`} />
-            <Row label="Quality" value={`${Math.round(result.quality * 100)}%`} />
-            <Row
-              label="Total Cost"
-              value={`$${result.totalCost.toLocaleString()}`}
-              color="text-red-400"
-            />
-            <Row
-              label="Revenue"
-              value={`$${result.revenue.toLocaleString()}`}
-              color="text-emerald-400"
-            />
-            <div className="border-t border-gray-600 pt-2">
+        {/* Results column */}
+        <div className="flex-1 max-w-md w-full">
+          {/* Grade */}
+          <div className="text-center mb-6">
+            <div className={`text-8xl font-black ${gradeColors[result.grade] ?? 'text-white'}`}>
+              {result.grade}
+            </div>
+            <p className="text-gray-400 mt-2">{result.featuresShipped}</p>
+          </div>
+
+          {/* Breakdown */}
+          <div className="bg-gray-800 border border-gray-700 rounded-lg p-5 mb-6">
+            <h3 className="text-white font-semibold mb-3">Results Breakdown</h3>
+            <div className="space-y-2 text-sm">
+              <Row label="Completion" value={`${Math.round(result.completion * 100)}%`} />
+              <Row label="Quality" value={`${Math.round(result.quality * 100)}%`} />
               <Row
-                label="ROI"
-                value={`${result.roi >= 0 ? '+' : ''}${Math.round(result.roi)}%`}
-                color={result.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}
+                label="Total Cost"
+                value={`$${result.totalCost.toLocaleString()}`}
+                color="text-red-400"
               />
+              <Row
+                label="Revenue"
+                value={`$${result.revenue.toLocaleString()}`}
+                color="text-emerald-400"
+              />
+              <div className="border-t border-gray-600 pt-2">
+                <Row
+                  label="ROI"
+                  value={`${result.roi >= 0 ? '+' : ''}${Math.round(result.roi)}%`}
+                  color={result.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <button
-          onClick={handleRetry}
-          className="w-full px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg text-lg transition-colors"
-        >
-          Try Again
-        </button>
+          <button
+            onClick={handleRetry}
+            className="w-full px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg text-lg transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     </div>
   )
