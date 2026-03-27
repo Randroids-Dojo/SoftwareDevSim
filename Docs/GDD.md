@@ -98,7 +98,7 @@ The player has 4 sprints regardless. Simple apps are easy to complete; complex a
 
 ### Demo Day — App Preview
 
-A phone-screen mockup shows the app the team is building in real time. During sprints, the player can click "View App" to see a live preview that updates as completion and quality change. The same preview appears on the end screen as the final result. Completion and quality control what the player sees:
+A phone-screen mockup shows the app the team is building. The player can **click any desk monitor** in the 3D scene to pop open a live preview that updates as completion and quality change. Clicking anywhere outside the preview (or clicking a monitor again) dismisses it. The same preview also appears on the end screen as the final result. Completion and quality control what the player sees:
 
 **Completion controls feature visibility:**
 - < 40%: Blank screen with a spinner or "Coming Soon" placeholder

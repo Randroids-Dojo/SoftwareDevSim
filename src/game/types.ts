@@ -43,6 +43,8 @@ export interface GameInstance {
   camera: THREE.OrthographicCamera
   renderer: THREE.WebGLRenderer
   state: GameState
+  /** The monitor screen meshes in the 3D scene (one per desk). */
+  screenMeshes: THREE.Mesh[]
   start(): void
   stop(): void
   getState(): GameState

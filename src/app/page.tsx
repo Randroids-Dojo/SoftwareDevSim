@@ -58,17 +58,57 @@ function buildTeamStates(roster: { role: Role; count: number }[]): WorkerState[]
 export default function Home() {
   const [game, setGame] = useState<GameActions | null>(null)
   const snapshot = useGameState(game)
+  const [showPreview, setShowPreview] = useState(false)
 
   const onGameReady = useCallback((g: GameActions) => {
     setGame(g)
   }, [])
 
+  const onScreenClick = useCallback(() => {
+    setShowPreview((prev) => !prev)
+  }, [])
+
   const phase = snapshot?.phase ?? game?.state.phase ?? 'title'
+
+  // Close preview when phase changes
+  useEffect(() => {
+    setShowPreview(false)
+  }, [phase])
+
+  // Compute live completion for preview
+  const chosenApp = snapshot?.chosenApp
+  const liveCompletion = chosenApp
+    ? Math.min(1, (snapshot?.progress ?? 0) / (chosenApp.estimatedSprints / 4))
+    : 0
 
   return (
     <main className="relative w-screen h-dvh overflow-hidden bg-gray-900">
       {/* 3D canvas always renders in the background */}
-      <GameCanvas onGameReady={onGameReady} />
+      <GameCanvas onGameReady={onGameReady} onScreenClick={onScreenClick} />
+
+      {/* App preview popup — triggered by clicking desk monitors */}
+      {showPreview && chosenApp && snapshot && (
+        <div
+          className="absolute inset-0 z-40 flex items-center justify-center"
+          onClick={() => setShowPreview(false)}
+        >
+          <div className="absolute inset-0 bg-black/50" />
+          <div className="relative z-50" onClick={(e) => e.stopPropagation()}>
+            <AppDemoPreview
+              appId={chosenApp.id}
+              completion={liveCompletion}
+              quality={snapshot.quality}
+              seed={snapshot.seed}
+            />
+            <button
+              onClick={() => setShowPreview(false)}
+              className="mt-3 w-full text-center text-gray-400 hover:text-white text-sm transition-colors"
+            >
+              Click anywhere to close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* UI overlays based on game phase */}
       {phase === 'title' && game && <TitleScreen game={game} />}
@@ -305,19 +345,10 @@ const SPEED_OPTIONS = [
 ] as const
 
 function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActions }) {
-  const { sprint, progress, quality, chosenApp, team, clock, seed } = snapshot
+  const { sprint, progress, quality, chosenApp, team, clock } = snapshot
   const paused = clock.paused
   const sprintNum = sprint.current + 1
   const dayProgress = sprint.dayInSprint / sprint.daysPerSprint
-  const [showPreview, setShowPreview] = useState(false)
-
-  // Close preview when game ends
-  useEffect(() => {
-    if (snapshot.phase !== 'running') setShowPreview(false)
-  }, [snapshot.phase])
-
-  // Compute live completion from progress + app difficulty
-  const liveCompletion = chosenApp ? Math.min(1, progress / (chosenApp.estimatedSprints / 4)) : 0
 
   // Team composition summary
   const roleCounts = {
@@ -373,16 +404,6 @@ function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActi
                     </button>
                   ))}
                 </div>
-                <button
-                  onClick={() => setShowPreview((p) => !p)}
-                  className={`pointer-events-auto px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                    showPreview
-                      ? 'bg-purple-600 hover:bg-purple-500 text-white'
-                      : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                  }`}
-                >
-                  {showPreview ? 'Hide App' : 'View App'}
-                </button>
                 <button
                   onClick={togglePause}
                   className={`pointer-events-auto px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${
@@ -473,18 +494,6 @@ function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActi
           </div>
         </div>
       </div>
-
-      {/* Live app preview panel */}
-      {showPreview && chosenApp && (
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 z-30 pointer-events-auto">
-          <AppDemoPreview
-            appId={chosenApp.id}
-            completion={liveCompletion}
-            quality={quality}
-            seed={seed}
-          />
-        </div>
-      )}
 
       {/* Paused overlay */}
       {paused && (
