@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * AppDemoPreview — renders a phone-screen mockup of the app the team built.
  * Completion controls which features are visible.

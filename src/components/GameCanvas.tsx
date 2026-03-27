@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import * as THREE from 'three'
+import { Raycaster, Vector2 } from 'three'
 import type { GameActions } from '../game'
 
 interface GameCanvasProps {
@@ -43,8 +43,8 @@ export default function GameCanvas({ onGameReady, onScreenClick }: GameCanvasPro
   const onScreenClickRef = useRef(onScreenClick)
   onScreenClickRef.current = onScreenClick
 
-  const raycaster = useRef(new THREE.Raycaster())
-  const pointer = useRef(new THREE.Vector2())
+  const raycaster = useRef(new Raycaster())
+  const pointer = useRef(new Vector2())
 
   // Touch gesture state
   const touchStateRef = useRef<{
@@ -180,6 +180,20 @@ export default function GameCanvas({ onGameReady, onScreenClick }: GameCanvasPro
         state.lastX = e.touches[0].clientX
         state.lastY = e.touches[0].clientY
       } else if (e.touches.length === 0) {
+        // Tap (no drag) — check for screen hit
+        if (state.type === 'none' && container) {
+          const game = gameRef.current
+          if (game && game.screenMeshes.length > 0) {
+            const rect = container.getBoundingClientRect()
+            pointer.current.x = ((state.startX - rect.left) / rect.width) * 2 - 1
+            pointer.current.y = -((state.startY - rect.top) / rect.height) * 2 + 1
+            raycaster.current.setFromCamera(pointer.current, game.camera)
+            const hits = raycaster.current.intersectObjects(game.screenMeshes)
+            if (hits.length > 0) {
+              onScreenClickRef.current?.()
+            }
+          }
+        }
         state.type = 'none'
       }
     }
