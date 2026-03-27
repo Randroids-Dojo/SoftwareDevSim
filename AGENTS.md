@@ -188,7 +188,8 @@ Title → Choose App → Hire Team → Auto-Play (4 sprints) → End Screen → 
 | `src/game/character/schedule.ts` | Role-based activity decisions |
 | `src/game/renderer.ts` | Three.js setup, camera controls |
 | `src/game/office.ts` | Voxel office layout and desk positions |
-| `src/components/GameCanvas.tsx` | 3D canvas with mouse/touch input handling |
+| `src/components/GameCanvas.tsx` | 3D canvas with mouse/touch input handling and monitor raycasting |
+| `src/components/AppDemoPreview.tsx` | Phone mockup of the app being built (completion/quality-driven) |
 
 ### Roles & Scoring
 

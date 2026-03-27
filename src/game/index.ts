@@ -220,6 +220,7 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
     camera: gameRenderer.camera,
     renderer: gameRenderer.renderer,
     state,
+    screenMeshes: gameRenderer.office.screenMeshes,
 
     start() {
       gameRenderer.start()

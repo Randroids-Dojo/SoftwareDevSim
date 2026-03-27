@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { Raycaster, Vector2 } from 'three'
 import type { GameActions } from '../game'
 
 interface GameCanvasProps {
   onGameReady: (game: GameActions) => void
+  onScreenClick?: () => void
 }
 
 /** Pixel distance between two 2D points */
@@ -32,12 +34,17 @@ const PAN_THRESHOLD = 8
 /** Radians per pixel of horizontal mouse drag for rotation */
 const ROTATE_SPEED = 0.005
 
-export default function GameCanvas({ onGameReady }: GameCanvasProps) {
+export default function GameCanvas({ onGameReady, onScreenClick }: GameCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const gameRef = useRef<GameActions | null>(null)
   const onGameReadyRef = useRef(onGameReady)
   onGameReadyRef.current = onGameReady
+  const onScreenClickRef = useRef(onScreenClick)
+  onScreenClickRef.current = onScreenClick
+
+  const raycaster = useRef(new Raycaster())
+  const pointer = useRef(new Vector2())
 
   // Touch gesture state
   const touchStateRef = useRef<{
@@ -173,6 +180,20 @@ export default function GameCanvas({ onGameReady }: GameCanvasProps) {
         state.lastX = e.touches[0].clientX
         state.lastY = e.touches[0].clientY
       } else if (e.touches.length === 0) {
+        // Tap (no drag) — check for screen hit
+        if (state.type === 'none' && container) {
+          const game = gameRef.current
+          if (game && game.screenMeshes.length > 0) {
+            const rect = container.getBoundingClientRect()
+            pointer.current.x = ((state.startX - rect.left) / rect.width) * 2 - 1
+            pointer.current.y = -((state.startY - rect.top) / rect.height) * 2 + 1
+            raycaster.current.setFromCamera(pointer.current, game.camera)
+            const hits = raycaster.current.intersectObjects(game.screenMeshes)
+            if (hits.length > 0) {
+              onScreenClickRef.current?.()
+            }
+          }
+        }
         state.type = 'none'
       }
     }
@@ -239,10 +260,26 @@ export default function GameCanvas({ onGameReady }: GameCanvasProps) {
       state.lastY = e.clientY
     }
 
-    function onMouseUp(): void {
-      mouseStateRef.current.isDown = false
-      mouseStateRef.current.isPanning = false
+    function onMouseUp(e: MouseEvent): void {
+      const state = mouseStateRef.current
+      const wasPanning = state.isPanning
+      state.isDown = false
+      state.isPanning = false
       if (container) container.style.cursor = 'grab'
+
+      // If this was a click (no drag), check for screen hit
+      if (!wasPanning && e.button === 0 && container) {
+        const game = gameRef.current
+        if (!game || game.screenMeshes.length === 0) return
+        const rect = container.getBoundingClientRect()
+        pointer.current.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
+        pointer.current.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
+        raycaster.current.setFromCamera(pointer.current, game.camera)
+        const hits = raycaster.current.intersectObjects(game.screenMeshes)
+        if (hits.length > 0) {
+          onScreenClickRef.current?.()
+        }
+      }
     }
 
     function onWheel(e: WheelEvent): void {
