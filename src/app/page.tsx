@@ -340,8 +340,8 @@ function HireTeamScreen({
 const SPEED_OPTIONS = [
   { speed: 50, label: '\u203A', title: 'Slow' },
   { speed: 100, label: '\u00BB', title: 'Normal' },
-  { speed: 250, label: '\u00BB\u203A', title: 'Fast' },
-  { speed: 500, label: '\u00BB\u00BB', title: 'Very Fast' },
+  { speed: 500, label: '\u00BB\u203A', title: 'Fast' },
+  { speed: 1200, label: '\u00BB\u00BB', title: 'Very Fast' },
 ] as const
 
 function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActions }) {

@@ -16,8 +16,8 @@ const ACTIVITY_TO_ANIMATION: Record<ActivityState, AnimationName> = {
   standup: 'talk',
 }
 
-/** Base movement speed in units per second. Speed scaling is capped so
- *  characters cross the room in 1-2 seconds at any game speed. */
+/** Base movement speed in units per second. Speed scaling is capped at 12×
+ *  so characters cross the room in 1-2 seconds at any game speed. */
 const FRAME_MOVE_SPEED = 8
 
 export class Developer {
@@ -93,7 +93,7 @@ export class Developer {
       if (dist > 0.5) {
         this.state.currentActivity = transition(this.state.currentActivity, 'moving')
         this.facing = facingAngle(this.state.position, this.targetPosition)
-        const speed = FRAME_MOVE_SPEED * dt * Math.min(Math.max(1, this.clockSpeed), 5)
+        const speed = FRAME_MOVE_SPEED * dt * Math.min(Math.max(1, this.clockSpeed), 12)
         const result = moveToward(this.state.position, this.targetPosition, speed)
         this.state.position = result.position
 
