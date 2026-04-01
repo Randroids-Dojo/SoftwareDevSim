@@ -74,7 +74,7 @@ npm run test:unit      # Fast iteration during development
 npm run test:coverage  # Before committing — enforces coverage thresholds
 ```
 
-Coverage thresholds (enforced in CI): **lines ≥ 90%**, **branches ≥ 80%**, **functions ≥ 90%**. Coverage is measured on pure game logic files: `src/game/scoring.ts`, `src/game/simulation/**`, and select character modules (`needs.ts`, `schedule.ts`, `stateMachine.ts`, `pathfinder.ts`). Browser-only 3D files (renderer, office, mesh, animations) are excluded.
+Coverage thresholds (enforced in CI): **lines ≥ 90%**, **branches ≥ 80%**, **functions ≥ 90%**. Coverage is measured on pure game logic files: `src/game/scoring.ts`, `src/game/events.ts`, `src/game/simulation/**`, and select character modules (`needs.ts`, `schedule.ts`, `stateMachine.ts`, `pathfinder.ts`). Browser-only 3D files (renderer, office, mesh, animations) are excluded.
 
 ### Rules for agents
 
@@ -182,6 +182,7 @@ Title → Choose App → Hire Team → Auto-Play (4 sprints) → End Screen → 
 | `src/app/page.tsx` | All UI screens (title, app select, hire, sprint overlay, end screen) |
 | `src/game/index.ts` | Game factory, tick loop, constants (salaries, app choices) |
 | `src/game/scoring.ts` | Pure scoring logic (progress, quality, revenue, grading) |
+| `src/game/events.ts` | Sprint crisis catalog, preconditions, selection, and effect application |
 | `src/game/types.ts` | TypeScript types derived from Zod schemas |
 | `src/lib/schemas.ts` | Zod schemas (source of truth for all data shapes) |
 | `src/game/character/developer.ts` | Worker class (role-based AI, movement, animation) |

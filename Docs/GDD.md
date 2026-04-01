@@ -34,10 +34,10 @@ You're a startup founder who gets to experiment with different team compositions
 ### Core Loop
 
 ```
-Choose App → Hire Team → Watch 4 Sprints → See Results → Retry
+Choose App → Hire Team → Play 4 Sprints (with crises) → See Results → Retry
 ```
 
-The player picks an app to build, allocates budget across roles, and watches the office animate through 4 sprints. At the end, they see a letter grade, cost/revenue breakdown, and can retry with a different strategy.
+The player picks an app to build, allocates budget across roles, and watches the office animate through 4 sprints. Between sprints, narrative crises interrupt and force strategic decisions. At the end, they see a letter grade, cost/revenue breakdown, and can retry with a different strategy.
 
 ### Win/Loss Conditions
 
@@ -218,8 +218,11 @@ AppChoice:   id, name, description, complexity, estimatedSprints, revenuePotenti
 
 SprintState: current (0-3), total (4), dayInSprint, daysPerSprint (5)
 
+Crisis:      id, title, narrative, choices[], triggeredAtSprint
+
 GameState:   phase, cash, chosenApp, team[], sprint, clock,
-             progress (0-1), quality (0-1), result, seed
+             progress (0-1), quality (0-1), result, seed,
+             pendingCrisis, crisisOutcome, crisesResolved[], progressBonus
 ```
 
 ### State Management
@@ -243,8 +246,9 @@ GameState:   phase, cash, chosenApp, team[], sprint, clock,
 Progress and quality are calculated once per sprint completion (not per-tick). Each sprint:
 1. Clock ticks at selected speed (default 100×)
 2. Workers animate based on role (devs type, POs visit whiteboard, managers hold meetings)
-3. After 5 game days: sprint completes, progress/quality updated
-4. After 4 sprints: result calculated, end screen shown
+3. After 5 game days: sprint completes, progress/quality updated, deferred bonuses applied
+4. Between sprints 1–3: a crisis may trigger (game pauses, player chooses, effects apply, outcome toast shown)
+5. After 4 sprints: result calculated, end screen shown
 
 ---
 
@@ -258,6 +262,8 @@ Progress and quality are calculated once per sprint completion (not per-tick). E
 | **App Selection** | 3 cards: Todo App, Fitness Tracker, E-Commerce Platform |
 | **Hire Team** | +/- controls for each role, live budget tracking |
 | **Sprint Overlay** | Sprint counter, day progress bar, overall progress bar |
+| **Crisis Modal** | Narrative text, 2 choice buttons with effect descriptions (amber-themed, z-[35]) |
+| **Crisis Outcome Toast** | Brief summary of crisis resolution (auto-dismisses after 4s) |
 | **End Screen** | Letter grade, completion %, quality %, cost/revenue/ROI breakdown, Retry button |
 
 All screens render as overlays on top of the 3D office canvas.

@@ -586,3 +586,241 @@ describe('CRISIS_CATALOG integrity', () => {
     }
   })
 })
+
+// --- Boundary & mutation-resistant tests ---
+
+describe('boundary values and operator sensitivity', () => {
+  it('tech_debt: progress exactly at 0.15 boundary triggers', () => {
+    const crisis = findCrisis('tech_debt')
+    assert.equal(crisis.precondition(makeState({ progress: 0.15 })), true)
+    assert.equal(crisis.precondition(makeState({ progress: 0.149 })), false)
+  })
+
+  it('security_vuln: progress exactly at 0.3 boundary triggers', () => {
+    const crisis = findCrisis('security_vuln')
+    assert.equal(crisis.precondition(makeState({ progress: 0.3 })), true)
+    assert.equal(crisis.precondition(makeState({ progress: 0.299 })), false)
+  })
+
+  it('investor_interest: progress exactly at 0.2 boundary triggers', () => {
+    const crisis = findCrisis('investor_interest')
+    assert.equal(crisis.precondition(makeState({ progress: 0.2 })), true)
+    assert.equal(crisis.precondition(makeState({ progress: 0.199 })), false)
+  })
+
+  it('burnout: energy exactly at 0.5 boundary does NOT trigger', () => {
+    const crisis = findCrisis('burnout')
+    const teamAtBoundary = [{ ...makeWorker('developer', 'w-0'), energy: 0.5 }]
+    assert.equal(crisis.precondition(makeState({ team: teamAtBoundary })), false)
+    const teamJustBelow = [{ ...makeWorker('developer', 'w-0'), energy: 0.499 }]
+    assert.equal(crisis.precondition(makeState({ team: teamJustBelow })), true)
+  })
+
+  it('designer_breakthrough: quality exactly at 0.8 does NOT trigger', () => {
+    const crisis = findCrisis('designer_breakthrough')
+    assert.equal(
+      crisis.precondition(makeState({ team: [makeWorker('designer')], quality: 0.8 })),
+      false,
+    )
+    assert.equal(
+      crisis.precondition(makeState({ team: [makeWorker('designer')], quality: 0.799 })),
+      true,
+    )
+  })
+
+  it('star_dev_poached: cash exactly at 25000 boundary triggers', () => {
+    const crisis = findCrisis('star_dev_poached')
+    const twoDevs = [makeWorker('developer', 'w-0'), makeWorker('developer', 'w-1')]
+    assert.equal(crisis.precondition(makeState({ team: twoDevs, cash: 25_000 })), true)
+    assert.equal(crisis.precondition(makeState({ team: twoDevs, cash: 24_999 })), false)
+  })
+
+  it('tech_debt refactor: quality change is exactly +0.1', () => {
+    const state = makeState({ quality: 0.5, progress: 0.5 })
+    findCrisis('tech_debt').applyChoice(state, 'refactor')
+    assertCloseTo(state.quality, 0.6, 0.0001)
+    assertCloseTo(state.progress, 0.45, 0.0001)
+  })
+
+  it('tech_debt push: quality change is exactly -0.08', () => {
+    const state = makeState({ quality: 0.5 })
+    findCrisis('tech_debt').applyChoice(state, 'push')
+    assertCloseTo(state.quality, 0.42, 0.0001)
+  })
+
+  it('scope_creep accept: progress change is exactly -0.1, quality +0.05', () => {
+    const state = makeState({ progress: 0.5, quality: 0.5 })
+    findCrisis('scope_creep').applyChoice(state, 'accept')
+    assertCloseTo(state.progress, 0.4, 0.0001)
+    assertCloseTo(state.quality, 0.55, 0.0001)
+  })
+
+  it('scope_creep push_back: quality change is exactly -0.03', () => {
+    const state = makeState({ quality: 0.5 })
+    findCrisis('scope_creep').applyChoice(state, 'push_back')
+    assertCloseTo(state.quality, 0.47, 0.0001)
+  })
+
+  it('open_source adopt: progress +0.08, quality -0.05 exact', () => {
+    const state = makeState({ progress: 0.5, quality: 0.5 })
+    findCrisis('open_source').applyChoice(state, 'adopt')
+    assertCloseTo(state.progress, 0.58, 0.0001)
+    assertCloseTo(state.quality, 0.45, 0.0001)
+  })
+
+  it('open_source build: quality +0.05 exact', () => {
+    const state = makeState({ quality: 0.5 })
+    findCrisis('open_source').applyChoice(state, 'build')
+    assertCloseTo(state.quality, 0.55, 0.0001)
+  })
+
+  it('security_vuln workaround: quality -0.10 exact', () => {
+    const state = makeState({ quality: 0.5 })
+    findCrisis('security_vuln').applyChoice(state, 'workaround')
+    assertCloseTo(state.quality, 0.4, 0.0001)
+  })
+
+  it('designer_breakthrough redesign: quality +0.15, progress -0.06 exact', () => {
+    const state = makeState({ quality: 0.5, progress: 0.5 })
+    findCrisis('designer_breakthrough').applyChoice(state, 'redesign')
+    assertCloseTo(state.quality, 0.65, 0.0001)
+    assertCloseTo(state.progress, 0.44, 0.0001)
+  })
+
+  it('designer_breakthrough stay: progress -0.03 exact', () => {
+    const state = makeState({ progress: 0.5 })
+    findCrisis('designer_breakthrough').applyChoice(state, 'stay')
+    assertCloseTo(state.progress, 0.47, 0.0001)
+  })
+
+  it('investor_interest take_money: cash +40000, progress -0.05 exact', () => {
+    const state = makeState({ cash: 200_000, progress: 0.5 })
+    findCrisis('investor_interest').applyChoice(state, 'take_money')
+    assert.equal(state.cash, 240_000)
+    assertCloseTo(state.progress, 0.45, 0.0001)
+  })
+
+  it('investor_interest independent: quality -0.02 exact', () => {
+    const state = makeState({ quality: 0.5 })
+    findCrisis('investor_interest').applyChoice(state, 'independent')
+    assertCloseTo(state.quality, 0.48, 0.0001)
+  })
+
+  it('cicd_down fix: progress -0.04, progressBonus +0.06 exact', () => {
+    const state = makeState({ progress: 0.5, progressBonus: 0 })
+    findCrisis('cicd_down').applyChoice(state, 'fix')
+    assertCloseTo(state.progress, 0.46, 0.0001)
+    assertCloseTo(state.progressBonus, 0.06, 0.0001)
+  })
+
+  it('cicd_down manual: quality -0.04 exact', () => {
+    const state = makeState({ quality: 0.5 })
+    findCrisis('cicd_down').applyChoice(state, 'manual')
+    assertCloseTo(state.quality, 0.46, 0.0001)
+  })
+
+  it('burnout rest: energy set to exactly 0.9, progress -0.03', () => {
+    const tired = [{ ...makeWorker('developer', 'w-0'), energy: 0.1 }]
+    const state = makeState({ team: tired, progress: 0.5 })
+    findCrisis('burnout').applyChoice(state, 'rest')
+    assert.equal(state.team[0].energy, 0.9)
+    assertCloseTo(state.progress, 0.47, 0.0001)
+  })
+
+  it('burnout push: quality -0.06 exact', () => {
+    const state = makeState({ quality: 0.5 })
+    findCrisis('burnout').applyChoice(state, 'push')
+    assertCloseTo(state.quality, 0.44, 0.0001)
+  })
+
+  it('manager_micromanagement coach: quality +0.05 exact', () => {
+    const state = makeState({
+      quality: 0.5,
+      team: [
+        makeWorker('developer', 'w-0'),
+        makeWorker('manager', 'w-1'),
+        makeWorker('manager', 'w-2'),
+      ],
+    })
+    findCrisis('manager_micromanagement').applyChoice(state, 'coach')
+    assertCloseTo(state.quality, 0.55, 0.0001)
+  })
+
+  it('star_dev_poached counter: cash -25000 exact', () => {
+    const state = makeState({ cash: 100_000 })
+    findCrisis('star_dev_poached').applyChoice(state, 'counter')
+    assert.equal(state.cash, 75_000)
+  })
+})
+
+// --- Helper function tests ---
+
+describe('removeLastWorkerByRole edge cases', () => {
+  it('star_dev_poached removes the LAST developer, not the first', () => {
+    const state = makeState({
+      team: [
+        makeWorker('designer', 'w-0'),
+        makeWorker('developer', 'w-1'),
+        makeWorker('developer', 'w-2'),
+        makeWorker('manager', 'w-3'),
+      ],
+    })
+    findCrisis('star_dev_poached').applyChoice(state, 'let_go')
+    assert.equal(state.team.length, 3)
+    // w-2 (last dev) should be gone, w-1 (first dev) should remain
+    assert.ok(state.team.some((w) => w.id === 'w-1'))
+    assert.ok(!state.team.some((w) => w.id === 'w-2'))
+  })
+
+  it('manager let_go removes last manager, not first', () => {
+    const state = makeState({
+      team: [
+        makeWorker('developer', 'w-0'),
+        makeWorker('manager', 'w-1'),
+        makeWorker('manager', 'w-2'),
+      ],
+    })
+    findCrisis('manager_micromanagement').applyChoice(state, 'let_go')
+    assert.ok(state.team.some((w) => w.id === 'w-1'))
+    assert.ok(!state.team.some((w) => w.id === 'w-2'))
+  })
+})
+
+describe('selectCrisis edge cases', () => {
+  it('returns null when all crises are resolved', () => {
+    const allIds = CRISIS_CATALOG.map((c) => c.id)
+    const state = makeState({
+      crisesResolved: allIds,
+      progress: 0.5,
+      quality: 0.3,
+    })
+    assert.equal(selectCrisis(state), null)
+  })
+
+  it('progressBonus accumulates if CI/CD fix chosen twice', () => {
+    const state = makeState({ progress: 0.5, progressBonus: 0.06 })
+    findCrisis('cicd_down').applyChoice(state, 'fix')
+    assertCloseTo(state.progressBonus, 0.12, 0.0001)
+  })
+
+  it('applyCrisisChoice returns non-empty summary for every crisis and choice', () => {
+    for (const crisis of CRISIS_CATALOG) {
+      for (const choice of crisis.choices) {
+        const state = makeState({
+          progress: 0.5,
+          quality: 0.5,
+          cash: 500_000,
+          team: [
+            makeWorker('developer', 'w-0'),
+            makeWorker('developer', 'w-1'),
+            makeWorker('designer', 'w-2'),
+            makeWorker('manager', 'w-3'),
+            makeWorker('manager', 'w-4'),
+          ],
+        })
+        const summary = crisis.applyChoice(state, choice.id)
+        assert.ok(summary.length > 0, `${crisis.id}/${choice.id} returned empty summary`)
+      }
+    }
+  })
+})
