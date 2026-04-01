@@ -591,7 +591,7 @@ function CrisisOutcomeToast({ message, game }: { message: string; game: GameActi
   return (
     <div className="absolute bottom-16 left-0 right-0 z-[35] flex justify-center pointer-events-none">
       <div
-        className="bg-gray-800 border border-amber-500/40 rounded-lg px-5 py-3 shadow-lg max-w-md mx-4 animate-fade-in"
+        className="bg-gray-800 border border-amber-500/40 rounded-lg px-5 py-3 shadow-lg max-w-md mx-4"
         role="status"
       >
         <p className="text-gray-200 text-sm text-center">{message}</p>

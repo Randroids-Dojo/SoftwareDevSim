@@ -7,7 +7,7 @@ export interface CrisisDefinition {
   id: string
   title: string
   narrative: string
-  choices: { id: string; label: string; description: string }[]
+  choices: Crisis['choices']
   /** Return true when this crisis is valid given current game state. */
   precondition: (state: GameState) => boolean
   /** Mutate state to apply the chosen option. Return a short summary. */

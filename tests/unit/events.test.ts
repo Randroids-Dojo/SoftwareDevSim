@@ -193,7 +193,7 @@ describe('CRISIS_CATALOG preconditions', () => {
     assert.equal(crisis.precondition(makeState()), true)
   })
 
-  it('manager_micromanagement requires manager and dev', () => {
+  it('manager_micromanagement requires >= 2 managers and >= 1 dev', () => {
     const crisis = findCrisis('manager_micromanagement')
     // Needs both a dev and >=2 managers (never leaves player with 0 managers)
     assert.equal(crisis.precondition(makeState({ team: [makeWorker('developer')] })), false)

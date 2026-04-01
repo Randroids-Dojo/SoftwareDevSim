@@ -4,7 +4,6 @@ import type {
   ActivityStateSchema,
   AppChoiceSchema,
   ComplexitySchema,
-  CrisisChoiceSchema,
   CrisisSchema,
   GameClockSchema,
   GamePhaseSchema,
@@ -25,7 +24,6 @@ export type ActivityState = z.infer<typeof ActivityStateSchema>
 export type GamePhase = z.infer<typeof GamePhaseSchema>
 export type Grade = z.infer<typeof GradeSchema>
 export type Complexity = z.infer<typeof ComplexitySchema>
-export type CrisisChoice = z.infer<typeof CrisisChoiceSchema>
 export type Crisis = z.infer<typeof CrisisSchema>
 export type WorkerState = z.infer<typeof WorkerStateSchema>
 export type AppChoice = z.infer<typeof AppChoiceSchema>
