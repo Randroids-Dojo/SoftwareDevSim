@@ -6,7 +6,7 @@ import FeedbackFab from '../components/FeedbackFab'
 import { useGameState } from '../hooks/useGameState'
 import type { GameActions } from '../game'
 import { APP_CHOICES, ROLE_SALARIES, ROLE_LABELS, STARTING_CASH, TOTAL_SPRINTS } from '../game'
-import type { AppChoice, GameResult, GameState, Role, WorkerState } from '../game/types'
+import type { AppChoice, Crisis, GameResult, GameState, Role, WorkerState } from '../game/types'
 import AppDemoPreview from '../components/AppDemoPreview'
 
 // --- Name pools for hired workers ---
@@ -117,6 +117,9 @@ export default function Home() {
         <HireTeamScreen game={game} cash={snapshot.cash} chosenApp={snapshot.chosenApp} />
       )}
       {phase === 'running' && snapshot && game && <SprintOverlay snapshot={snapshot} game={game} />}
+      {phase === 'running' && snapshot?.pendingCrisis && game && (
+        <CrisisModal crisis={snapshot.pendingCrisis} game={game} />
+      )}
       {phase === 'ended' && snapshot?.result && game && (
         <EndScreen
           result={snapshot.result}
@@ -534,6 +537,44 @@ function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActi
   )
 }
 
+// --- Crisis Modal ---
+
+function CrisisModal({ crisis, game }: { crisis: Crisis; game: GameActions }) {
+  return (
+    <div className="absolute inset-0 z-35 flex items-center justify-center pointer-events-none">
+      <div className="absolute inset-0 bg-black/60" />
+      <div className="relative z-50 pointer-events-auto max-w-lg w-full mx-4">
+        <div className="bg-gray-800 border border-amber-500/50 rounded-lg p-6 shadow-2xl">
+          {/* Header */}
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-amber-400 text-xl">&#x26A0;</span>
+            <h3 className="text-xl font-bold text-white">{crisis.title}</h3>
+          </div>
+
+          {/* Narrative */}
+          <p className="text-gray-300 mb-6 leading-relaxed">{crisis.narrative}</p>
+
+          {/* Choices */}
+          <div className="space-y-3">
+            {crisis.choices.map((choice) => (
+              <button
+                key={choice.id}
+                onClick={() => game.resolveCrisis(choice.id)}
+                className="w-full text-left bg-gray-700 hover:bg-gray-600 border border-gray-600 hover:border-blue-500 rounded-lg p-4 transition-colors group"
+              >
+                <div className="font-semibold text-white group-hover:text-blue-300 transition-colors">
+                  {choice.label}
+                </div>
+                <div className="text-gray-400 text-sm mt-1">{choice.description}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // --- End Screen ---
 
 function EndScreen({
@@ -571,6 +612,9 @@ function EndScreen({
     game.state.clock.day = 1
     game.state.clock.hour = 9
     game.state.clock.minute = 0
+    game.state.pendingCrisis = null
+    game.state.crisesResolved = []
+    game.state.progressBonus = 0
     game.clearWorkers()
   }
 

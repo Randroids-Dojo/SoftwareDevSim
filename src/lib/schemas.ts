@@ -59,6 +59,20 @@ export const GameClockSchema = z.object({
   speed: z.number().positive(),
 })
 
+export const CrisisChoiceSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1),
+  description: z.string().min(1),
+})
+
+export const CrisisSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  narrative: z.string().min(1),
+  choices: z.array(CrisisChoiceSchema).min(2).max(3),
+  triggeredAtSprint: z.number().int().min(0),
+})
+
 export const GameResultSchema = z.object({
   grade: GradeSchema,
   completion: z.number().min(0),
@@ -80,4 +94,7 @@ export const GameStateSchema = z.object({
   quality: z.number().min(0).max(1),
   result: GameResultSchema.nullable(),
   seed: z.string().min(1),
+  pendingCrisis: CrisisSchema.nullable(),
+  crisesResolved: z.array(z.string()),
+  progressBonus: z.number(),
 })

@@ -4,6 +4,7 @@ import { createClock, createClockTicker } from './simulation/clock'
 import { calculateSprintProgress, calculateQuality, calculateResult } from './scoring'
 import { isStandupTime } from './character/schedule'
 import { buildStandupCircle, buildOverflowSpots } from './office'
+import { selectCrisis, applyCrisisChoice } from './events'
 import type { AppChoice, GameInstance, GameState, WorkerState } from './types'
 
 // --- Constants ---
@@ -85,6 +86,9 @@ function createInitialState(seed: string): GameState {
     quality: 0,
     result: null,
     seed,
+    pendingCrisis: null,
+    crisesResolved: [],
+    progressBonus: 0,
   }
 }
 
@@ -202,6 +206,12 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
         state.progress = Math.min(1, state.progress + sprintProgress)
         state.quality = calculateQuality(state.team)
 
+        // Apply deferred progress bonus (e.g. from CI/CD fix crisis)
+        if (state.progressBonus > 0) {
+          state.progress = Math.min(1, state.progress + state.progressBonus)
+          state.progressBonus = 0
+        }
+
         state.sprint.current++
         state.sprint.dayInSprint = 0
 
@@ -210,6 +220,13 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
           state.result = calculateResult(state)
           state.phase = 'ended'
           state.clock.paused = true
+        } else if (state.sprint.current >= 1) {
+          // Trigger a crisis at sprint boundaries (between sprints 1-3)
+          const crisis = selectCrisis(state)
+          if (crisis) {
+            state.pendingCrisis = crisis
+            state.clock.paused = true
+          }
         }
       }
     }
@@ -241,6 +258,14 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
         clock: { ...state.clock },
         chosenApp: state.chosenApp ? { ...state.chosenApp } : null,
         result: state.result ? { ...state.result } : null,
+        pendingCrisis: state.pendingCrisis
+          ? {
+              ...state.pendingCrisis,
+              choices: state.pendingCrisis.choices.map((c) => ({ ...c })),
+            }
+          : null,
+        crisesResolved: [...state.crisesResolved],
+        progressBonus: state.progressBonus,
       }
     },
 
@@ -290,6 +315,15 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
 
     resetCamera() {
       gameRenderer.resetCamera()
+    },
+
+    resolveCrisis(choiceId: string) {
+      applyCrisisChoice(state, choiceId)
+
+      // If a crisis removed a team member, respawn workers with updated team
+      instance.spawnWorkers(state.team)
+
+      state.clock.paused = false
     },
   }
 

@@ -120,6 +120,33 @@ A phone-screen mockup shows the app the team is building. The player can **click
 | Fitness Tracker | Blank dashboard | Workout log, stats charts, activity rings |
 | E-Commerce Platform | "Under construction" page | Product grid, cart, checkout form |
 
+### Sprint Crises
+
+At each sprint boundary (after sprints 0, 1, and 2 complete), a **crisis** may interrupt the game — a narrative event that pauses the simulation and forces the player to choose between two options with real trade-offs. Crises add mid-game agency: instead of passively watching, the player actively manages the unexpected.
+
+**Timing:** Up to 3 crises per game (one per sprint boundary, except the final sprint). Selection uses seeded RNG — same seed produces same crises. No crisis fires if no preconditions are met.
+
+**Contextual validity:** Each crisis has preconditions checked against current game state. A "Star Developer Poached" crisis only fires if you have ≥2 developers. A "Security Vulnerability" only fires if progress ≥ 30%. This ensures crises are always narratively coherent.
+
+| Crisis | Precondition | Choice A | Choice B |
+|--------|-------------|----------|----------|
+| Technical Debt Pileup | progress ≥ 15% | Refactor: +10% quality, −5% progress | Push through: −8% quality |
+| Star Developer Poached | devCount ≥ 2 | Counter-offer: −$25K cash | Let them go: lose 1 dev |
+| Scope Creep | sprint ≥ 1 | Accept: −10% progress, +5% quality | Push back: no change |
+| Open-Source Goldmine | devCount ≥ 1 | Adopt: +8% progress, −5% quality | Build in-house: +5% quality |
+| Team Burnout | avg energy < 50% | Rest day: restore energy, −3% progress | Push through: −6% quality |
+| Security Vulnerability | progress ≥ 30% | Fix now: −6% progress | Workaround: −10% quality |
+| Designer Breakthrough | designerCount ≥ 1, quality < 80% | Redesign: +15% quality, −6% progress | Stay the course: no change |
+| Investor Interest | progress ≥ 20% | Take money: +$40K, −5% progress | Stay independent: no change |
+| CI/CD Pipeline Down | devCount ≥ 1, sprint ≥ 1 | Fix pipeline: −4% progress, +6% next sprint | Manual deploy: −4% quality |
+| Manager Micromanagement | managerCount ≥ 1, devCount ≥ 1 | Coach manager: +5% quality | Let manager go: lose 1 manager |
+
+**Design principles:**
+- No dominant strategy — each choice favors speed, quality, or cost differently
+- Effects are proportional to per-sprint output (progress ~0.2–0.6/sprint, quality 0.3–1.0 range)
+- Team-removal crises require ≥2 of that role (never leaves the player with zero)
+- "No change" options always exist as a safe but opportunity-costly choice
+
 ---
 
 ## 4. World & Setting
@@ -293,6 +320,7 @@ Free and open source.
 | Basic Game Loop | Choose app, hire team, auto-play 4 sprints, end screen with grading | Done |
 | Standup/Standdown | Daily team ceremonies with circle formation and chat bubbles | Done |
 | App Demo Preview | Live phone mockup showing the app being built, quality-dependent glitches | Done |
+| Sprint Crises | Mid-game narrative events with contextual preconditions and player choices | Done |
 
 ---
 
