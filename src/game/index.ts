@@ -318,10 +318,13 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
     },
 
     resolveCrisis(choiceId: string) {
+      const teamSizeBefore = state.team.length
       applyCrisisChoice(state, choiceId)
 
-      // If a crisis removed a team member, respawn workers with updated team
-      instance.spawnWorkers(state.team)
+      // Only respawn workers if a crisis removed a team member
+      if (state.team.length !== teamSizeBefore) {
+        instance.spawnWorkers(state.team)
+      }
 
       state.clock.paused = false
     },

@@ -11,6 +11,8 @@ import {
   AppChoiceSchema,
   SprintStateSchema,
   GameClockSchema,
+  CrisisChoiceSchema,
+  CrisisSchema,
   GameResultSchema,
   GameStateSchema,
 } from '../../src/lib/schemas'
@@ -73,6 +75,24 @@ function validGameResult() {
   }
 }
 
+function validCrisisChoice() {
+  return {
+    id: 'fix',
+    label: 'Fix Now',
+    description: 'Patch it immediately',
+  }
+}
+
+function validCrisis() {
+  return {
+    id: 'security_vuln',
+    title: 'Critical Security Vulnerability',
+    narrative: 'A security audit reveals a critical vulnerability.',
+    choices: [validCrisisChoice(), { id: 'skip', label: 'Skip', description: 'Ship anyway' }],
+    triggeredAtSprint: 1,
+  }
+}
+
 function validGameState() {
   return {
     phase: 'running' as const,
@@ -85,6 +105,9 @@ function validGameState() {
     quality: 0.7,
     result: null,
     seed: 'abc123',
+    pendingCrisis: null,
+    crisesResolved: [] as string[],
+    progressBonus: 0,
   }
 }
 
@@ -404,6 +427,102 @@ describe('GameClockSchema', () => {
 })
 
 // ---------------------------------------------------------------------------
+// CrisisChoiceSchema
+// ---------------------------------------------------------------------------
+
+describe('CrisisChoiceSchema', () => {
+  it('accepts a valid crisis choice', () => {
+    assert.equal(CrisisChoiceSchema.safeParse(validCrisisChoice()).success, true)
+  })
+
+  it('rejects empty id', () => {
+    assert.equal(CrisisChoiceSchema.safeParse({ ...validCrisisChoice(), id: '' }).success, false)
+  })
+
+  it('rejects empty label', () => {
+    assert.equal(CrisisChoiceSchema.safeParse({ ...validCrisisChoice(), label: '' }).success, false)
+  })
+
+  it('rejects empty description', () => {
+    assert.equal(
+      CrisisChoiceSchema.safeParse({ ...validCrisisChoice(), description: '' }).success,
+      false,
+    )
+  })
+})
+
+// ---------------------------------------------------------------------------
+// CrisisSchema
+// ---------------------------------------------------------------------------
+
+describe('CrisisSchema', () => {
+  it('accepts a valid crisis', () => {
+    assert.equal(CrisisSchema.safeParse(validCrisis()).success, true)
+  })
+
+  it('rejects empty id', () => {
+    assert.equal(CrisisSchema.safeParse({ ...validCrisis(), id: '' }).success, false)
+  })
+
+  it('rejects empty title', () => {
+    assert.equal(CrisisSchema.safeParse({ ...validCrisis(), title: '' }).success, false)
+  })
+
+  it('rejects empty narrative', () => {
+    assert.equal(CrisisSchema.safeParse({ ...validCrisis(), narrative: '' }).success, false)
+  })
+
+  it('rejects fewer than 2 choices', () => {
+    assert.equal(
+      CrisisSchema.safeParse({ ...validCrisis(), choices: [validCrisisChoice()] }).success,
+      false,
+    )
+  })
+
+  it('rejects more than 3 choices', () => {
+    const c = validCrisisChoice()
+    assert.equal(
+      CrisisSchema.safeParse({
+        ...validCrisis(),
+        choices: [
+          { ...c, id: 'a' },
+          { ...c, id: 'b' },
+          { ...c, id: 'c' },
+          { ...c, id: 'd' },
+        ],
+      }).success,
+      false,
+    )
+  })
+
+  it('accepts exactly 3 choices', () => {
+    const c = validCrisisChoice()
+    assert.equal(
+      CrisisSchema.safeParse({
+        ...validCrisis(),
+        choices: [
+          { ...c, id: 'a' },
+          { ...c, id: 'b' },
+          { ...c, id: 'c' },
+        ],
+      }).success,
+      true,
+    )
+  })
+
+  it('rejects negative triggeredAtSprint', () => {
+    assert.equal(CrisisSchema.safeParse({ ...validCrisis(), triggeredAtSprint: -1 }).success, false)
+  })
+
+  it('rejects non-integer triggeredAtSprint', () => {
+    assert.equal(
+      CrisisSchema.safeParse({ ...validCrisis(), triggeredAtSprint: 1.5 }).success,
+      false,
+    )
+  })
+})
+
+// ---------------------------------------------------------------------------
 // GameResultSchema
 // ---------------------------------------------------------------------------
 
@@ -496,6 +615,44 @@ describe('GameStateSchema', () => {
         team: [{ ...validWorker(), energy: 2 }],
       }).success,
       false,
+    )
+  })
+
+  it('accepts null pendingCrisis', () => {
+    assert.equal(
+      GameStateSchema.safeParse({ ...validGameState(), pendingCrisis: null }).success,
+      true,
+    )
+  })
+
+  it('accepts non-null pendingCrisis', () => {
+    assert.equal(
+      GameStateSchema.safeParse({ ...validGameState(), pendingCrisis: validCrisis() }).success,
+      true,
+    )
+  })
+
+  it('accepts empty crisesResolved array', () => {
+    assert.equal(
+      GameStateSchema.safeParse({ ...validGameState(), crisesResolved: [] }).success,
+      true,
+    )
+  })
+
+  it('accepts non-empty crisesResolved array', () => {
+    assert.equal(
+      GameStateSchema.safeParse({
+        ...validGameState(),
+        crisesResolved: ['tech_debt', 'burnout'],
+      }).success,
+      true,
+    )
+  })
+
+  it('accepts positive progressBonus', () => {
+    assert.equal(
+      GameStateSchema.safeParse({ ...validGameState(), progressBonus: 0.06 }).success,
+      true,
     )
   })
 })

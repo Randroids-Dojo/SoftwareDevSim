@@ -268,7 +268,7 @@ export const CRISIS_CATALOG: readonly CrisisDefinition[] = [
       },
     ],
     precondition: (s) =>
-      countByRole(s.team, 'manager') >= 1 && countByRole(s.team, 'developer') >= 1,
+      countByRole(s.team, 'manager') >= 2 && countByRole(s.team, 'developer') >= 1,
     applyChoice: (s, choiceId) => {
       if (choiceId === 'coach') {
         s.quality = Math.min(1, s.quality + 0.05)
@@ -309,6 +309,9 @@ export function applyCrisisChoice(state: GameState, choiceId: string): string {
 
   const definition = CRISIS_CATALOG.find((c) => c.id === crisis.id)
   if (!definition) return ''
+
+  // Validate that the choiceId is one of the offered options
+  if (!crisis.choices.some((c) => c.id === choiceId)) return ''
 
   const summary = definition.applyChoice(state, choiceId)
   state.crisesResolved.push(crisis.id)

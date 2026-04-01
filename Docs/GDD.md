@@ -139,7 +139,7 @@ At each sprint boundary (after sprints 0, 1, and 2 complete), a **crisis** may i
 | Designer Breakthrough | designerCount ≥ 1, quality < 80% | Redesign: +15% quality, −6% progress | Stay the course: no change |
 | Investor Interest | progress ≥ 20% | Take money: +$40K, −5% progress | Stay independent: no change |
 | CI/CD Pipeline Down | devCount ≥ 1, sprint ≥ 1 | Fix pipeline: −4% progress, +6% next sprint | Manual deploy: −4% quality |
-| Manager Micromanagement | managerCount ≥ 1, devCount ≥ 1 | Coach manager: +5% quality | Let manager go: lose 1 manager |
+| Manager Micromanagement | managerCount ≥ 2, devCount ≥ 1 | Coach manager: +5% quality | Let manager go: lose 1 manager |
 
 **Design principles:**
 - No dominant strategy — each choice favors speed, quality, or cost differently

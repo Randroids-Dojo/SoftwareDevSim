@@ -181,12 +181,25 @@ describe('CRISIS_CATALOG preconditions', () => {
 
   it('manager_micromanagement requires manager and dev', () => {
     const crisis = findCrisis('manager_micromanagement')
+    // Needs both a dev and >=2 managers (never leaves player with 0 managers)
     assert.equal(crisis.precondition(makeState({ team: [makeWorker('developer')] })), false)
     assert.equal(crisis.precondition(makeState({ team: [makeWorker('manager')] })), false)
     assert.equal(
       crisis.precondition(
         makeState({
           team: [makeWorker('developer', 'w-0'), makeWorker('manager', 'w-1')],
+        }),
+      ),
+      false,
+    )
+    assert.equal(
+      crisis.precondition(
+        makeState({
+          team: [
+            makeWorker('developer', 'w-0'),
+            makeWorker('manager', 'w-1'),
+            makeWorker('manager', 'w-2'),
+          ],
         }),
       ),
       true,
@@ -343,22 +356,30 @@ describe('crisis effects', () => {
   it('manager_micromanagement coach boosts quality', () => {
     const state = makeState({
       quality: 0.3,
-      team: [makeWorker('developer', 'w-0'), makeWorker('manager', 'w-1')],
+      team: [
+        makeWorker('developer', 'w-0'),
+        makeWorker('manager', 'w-1'),
+        makeWorker('manager', 'w-2'),
+      ],
     })
     const crisis = findCrisis('manager_micromanagement')
     crisis.applyChoice(state, 'coach')
     assertCloseTo(state.quality, 0.35, 0.001)
-    assert.equal(state.team.length, 2)
+    assert.equal(state.team.length, 3)
   })
 
   it('manager_micromanagement let_go removes a manager', () => {
     const state = makeState({
-      team: [makeWorker('developer', 'w-0'), makeWorker('manager', 'w-1')],
+      team: [
+        makeWorker('developer', 'w-0'),
+        makeWorker('manager', 'w-1'),
+        makeWorker('manager', 'w-2'),
+      ],
     })
     const crisis = findCrisis('manager_micromanagement')
     crisis.applyChoice(state, 'let_go')
-    assert.equal(state.team.length, 1)
-    assert.equal(state.team[0].role, 'developer')
+    assert.equal(state.team.length, 2)
+    assert.equal(state.team.filter((w) => w.role === 'manager').length, 1)
   })
 })
 
@@ -498,11 +519,26 @@ describe('applyCrisisChoice', () => {
       id: 'nonexistent',
       title: 'X',
       narrative: 'X',
-      choices: [{ id: 'a', label: 'A', description: 'A' }],
+      choices: [
+        { id: 'a', label: 'A', description: 'A' },
+        { id: 'b', label: 'B', description: 'B' },
+      ],
       triggeredAtSprint: 1,
     }
     const summary = applyCrisisChoice(state, 'a')
     assert.equal(summary, '')
+  })
+
+  it('returns empty string for invalid choiceId', () => {
+    const state = makeState({ progress: 0.3 })
+    const crisis = selectCrisis(state)
+    assert.ok(crisis, 'Expected a crisis to be selected')
+    state.pendingCrisis = crisis
+
+    const summary = applyCrisisChoice(state, 'bogus_choice')
+    assert.equal(summary, '')
+    // Crisis should NOT be resolved when choice is invalid
+    assert.ok(state.pendingCrisis, 'Crisis should still be pending')
   })
 })
 
