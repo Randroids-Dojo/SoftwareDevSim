@@ -62,6 +62,7 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     result: null,
     seed: 'test-seed',
     pendingCrisis: null,
+    crisisOutcome: null,
     crisesResolved: [],
     progressBonus: 0,
     ...overrides,
@@ -78,16 +79,29 @@ describe('CRISIS_CATALOG preconditions', () => {
     assert.equal(crisis.precondition(makeState({ progress: 0.5 })), true)
   })
 
-  it('star_dev_poached requires devCount >= 2', () => {
+  it('star_dev_poached requires devCount >= 2 and cash >= 25000', () => {
     const crisis = findCrisis('star_dev_poached')
+    // Too few devs
     assert.equal(crisis.precondition(makeState({ team: [makeWorker('developer', 'w-0')] })), false)
+    // Enough devs, enough cash
     assert.equal(
       crisis.precondition(
         makeState({
           team: [makeWorker('developer', 'w-0'), makeWorker('developer', 'w-1')],
+          cash: 25_000,
         }),
       ),
       true,
+    )
+    // Enough devs, not enough cash
+    assert.equal(
+      crisis.precondition(
+        makeState({
+          team: [makeWorker('developer', 'w-0'), makeWorker('developer', 'w-1')],
+          cash: 24_999,
+        }),
+      ),
+      false,
     )
   })
 
@@ -249,12 +263,12 @@ describe('crisis effects', () => {
     assertCloseTo(state.quality, 0.35, 0.001)
   })
 
-  it('scope_creep push_back has no effect', () => {
+  it('scope_creep push_back costs quality from stakeholder friction', () => {
     const state = makeState({ progress: 0.3, quality: 0.3 })
     const crisis = findCrisis('scope_creep')
     crisis.applyChoice(state, 'push_back')
     assertCloseTo(state.progress, 0.3, 0.001)
-    assertCloseTo(state.quality, 0.3, 0.001)
+    assertCloseTo(state.quality, 0.27, 0.001)
   })
 
   it('open_source adopt boosts progress, reduces quality', () => {
@@ -314,12 +328,12 @@ describe('crisis effects', () => {
     assertCloseTo(state.progress, 0.24, 0.001)
   })
 
-  it('designer_breakthrough stay has no effect', () => {
+  it('designer_breakthrough stay costs progress from designer frustration', () => {
     const state = makeState({ quality: 0.3, progress: 0.3 })
     const crisis = findCrisis('designer_breakthrough')
     crisis.applyChoice(state, 'stay')
     assertCloseTo(state.quality, 0.3, 0.001)
-    assertCloseTo(state.progress, 0.3, 0.001)
+    assertCloseTo(state.progress, 0.27, 0.001)
   })
 
   it('investor_interest take_money adds cash, reduces progress', () => {
@@ -330,12 +344,13 @@ describe('crisis effects', () => {
     assertCloseTo(state.progress, 0.25, 0.001)
   })
 
-  it('investor_interest independent has no effect', () => {
-    const state = makeState({ cash: 100_000, progress: 0.3 })
+  it('investor_interest independent costs quality from missed networking', () => {
+    const state = makeState({ cash: 100_000, progress: 0.3, quality: 0.5 })
     const crisis = findCrisis('investor_interest')
     crisis.applyChoice(state, 'independent')
     assert.equal(state.cash, 100_000)
     assertCloseTo(state.progress, 0.3, 0.001)
+    assertCloseTo(state.quality, 0.48, 0.001)
   })
 
   it('cicd_down fix reduces progress and sets progressBonus', () => {

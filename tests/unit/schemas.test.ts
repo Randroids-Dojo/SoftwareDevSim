@@ -106,6 +106,7 @@ function validGameState() {
     result: null,
     seed: 'abc123',
     pendingCrisis: null,
+    crisisOutcome: null,
     crisesResolved: [] as string[],
     progressBonus: 0,
   }

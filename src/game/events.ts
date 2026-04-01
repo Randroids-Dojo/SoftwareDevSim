@@ -67,7 +67,7 @@ export const CRISIS_CATALOG: readonly CrisisDefinition[] = [
       { id: 'counter', label: 'Counter-Offer', description: 'Pay $25K to keep them' },
       { id: 'let_go', label: 'Let Them Go', description: 'Lose one developer' },
     ],
-    precondition: (s) => countByRole(s.team, 'developer') >= 2,
+    precondition: (s) => countByRole(s.team, 'developer') >= 2 && s.cash >= 25_000,
     applyChoice: (s, choiceId) => {
       if (choiceId === 'counter') {
         s.cash -= 25_000
@@ -88,7 +88,11 @@ export const CRISIS_CATALOG: readonly CrisisDefinition[] = [
         label: 'Accept Scope',
         description: 'Better product vision (+5% quality, −10% progress)',
       },
-      { id: 'push_back', label: 'Push Back', description: 'Protect the sprint scope (no change)' },
+      {
+        id: 'push_back',
+        label: 'Push Back',
+        description: 'Protect the sprint scope (−3% quality from stakeholder friction)',
+      },
     ],
     precondition: (s) => s.sprint.current >= 1,
     applyChoice: (s, choiceId) => {
@@ -97,7 +101,8 @@ export const CRISIS_CATALOG: readonly CrisisDefinition[] = [
         s.quality = Math.min(1, s.quality + 0.05)
         return 'You accommodated the requests — more work, but a better product.'
       }
-      return 'You held the line — scope stays as planned.'
+      s.quality = Math.max(0, s.quality - 0.03)
+      return 'You held the line, but stakeholders are unhappy — morale dipped.'
     },
   },
   {
@@ -184,7 +189,11 @@ export const CRISIS_CATALOG: readonly CrisisDefinition[] = [
         label: 'Redesign',
         description: 'Bold new UX (+15% quality, −6% progress)',
       },
-      { id: 'stay', label: 'Stay the Course', description: 'Keep current design (no change)' },
+      {
+        id: 'stay',
+        label: 'Stay the Course',
+        description: 'Keep current design (−3% progress from designer frustration)',
+      },
     ],
     precondition: (s) => countByRole(s.team, 'designer') >= 1 && s.quality < 0.8,
     applyChoice: (s, choiceId) => {
@@ -193,7 +202,8 @@ export const CRISIS_CATALOG: readonly CrisisDefinition[] = [
         s.progress = Math.max(0, s.progress - 0.06)
         return 'The redesign is stunning — users will love it.'
       }
-      return 'You stuck with the current design — safe and steady.'
+      s.progress = Math.max(0, s.progress - 0.03)
+      return 'You stuck with the current design — the designer is disappointed.'
     },
   },
   {
@@ -210,7 +220,7 @@ export const CRISIS_CATALOG: readonly CrisisDefinition[] = [
       {
         id: 'independent',
         label: 'Stay Independent',
-        description: 'Decline the offer (no change)',
+        description: 'Decline the offer (−2% quality from missed networking)',
       },
     ],
     precondition: (s) => s.progress >= 0.2,
@@ -220,7 +230,8 @@ export const CRISIS_CATALOG: readonly CrisisDefinition[] = [
         s.progress = Math.max(0, s.progress - 0.05)
         return 'You took the investment — more cash, but a detour on the roadmap.'
       }
-      return 'You stayed independent — full control, no distractions.'
+      s.quality = Math.max(0, s.quality - 0.02)
+      return 'You stayed independent, but missed a valuable industry connection.'
     },
   },
   {

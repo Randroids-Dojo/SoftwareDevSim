@@ -120,6 +120,9 @@ export default function Home() {
       {phase === 'running' && snapshot?.pendingCrisis && game && (
         <CrisisModal crisis={snapshot.pendingCrisis} game={game} />
       )}
+      {phase === 'running' && snapshot?.crisisOutcome && game && (
+        <CrisisOutcomeToast message={snapshot.crisisOutcome} game={game} />
+      )}
       {phase === 'ended' && snapshot?.result && game && (
         <EndScreen
           result={snapshot.result}
@@ -541,7 +544,7 @@ function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActi
 
 function CrisisModal({ crisis, game }: { crisis: Crisis; game: GameActions }) {
   return (
-    <div className="absolute inset-0 z-35 flex items-center justify-center pointer-events-none">
+    <div className="absolute inset-0 z-[35] flex items-center justify-center pointer-events-none">
       <div className="absolute inset-0 bg-black/60" />
       <div className="relative z-50 pointer-events-auto max-w-lg w-full mx-4">
         <div className="bg-gray-800 border border-amber-500/50 rounded-lg p-6 shadow-2xl">
@@ -570,6 +573,28 @@ function CrisisModal({ crisis, game }: { crisis: Crisis; game: GameActions }) {
             ))}
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// --- Crisis Outcome Toast ---
+
+function CrisisOutcomeToast({ message, game }: { message: string; game: GameActions }) {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      game.state.crisisOutcome = null
+    }, 4000)
+    return () => clearTimeout(timer)
+  }, [message, game])
+
+  return (
+    <div className="absolute bottom-16 left-0 right-0 z-[35] flex justify-center pointer-events-none">
+      <div
+        className="bg-gray-800 border border-amber-500/40 rounded-lg px-5 py-3 shadow-lg max-w-md mx-4 animate-fade-in"
+        role="status"
+      >
+        <p className="text-gray-200 text-sm text-center">{message}</p>
       </div>
     </div>
   )
@@ -613,6 +638,7 @@ function EndScreen({
     game.state.clock.hour = 9
     game.state.clock.minute = 0
     game.state.pendingCrisis = null
+    game.state.crisisOutcome = null
     game.state.crisesResolved = []
     game.state.progressBonus = 0
     game.clearWorkers()

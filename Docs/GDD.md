@@ -131,21 +131,22 @@ At each sprint boundary (after sprints 0, 1, and 2 complete), a **crisis** may i
 | Crisis | Precondition | Choice A | Choice B |
 |--------|-------------|----------|----------|
 | Technical Debt Pileup | progress ≥ 15% | Refactor: +10% quality, −5% progress | Push through: −8% quality |
-| Star Developer Poached | devCount ≥ 2 | Counter-offer: −$25K cash | Let them go: lose 1 dev |
-| Scope Creep | sprint ≥ 1 | Accept: −10% progress, +5% quality | Push back: no change |
+| Star Developer Poached | devCount ≥ 2, cash ≥ $25K | Counter-offer: −$25K cash | Let them go: lose 1 dev |
+| Scope Creep | sprint ≥ 1 | Accept: −10% progress, +5% quality | Push back: −3% quality |
 | Open-Source Goldmine | devCount ≥ 1 | Adopt: +8% progress, −5% quality | Build in-house: +5% quality |
 | Team Burnout | avg energy < 50% | Rest day: restore energy, −3% progress | Push through: −6% quality |
 | Security Vulnerability | progress ≥ 30% | Fix now: −6% progress | Workaround: −10% quality |
-| Designer Breakthrough | designerCount ≥ 1, quality < 80% | Redesign: +15% quality, −6% progress | Stay the course: no change |
-| Investor Interest | progress ≥ 20% | Take money: +$40K, −5% progress | Stay independent: no change |
+| Designer Breakthrough | designerCount ≥ 1, quality < 80% | Redesign: +15% quality, −6% progress | Stay the course: −3% progress |
+| Investor Interest | progress ≥ 20% | Take money: +$40K, −5% progress | Stay independent: −2% quality |
 | CI/CD Pipeline Down | devCount ≥ 1, sprint ≥ 1 | Fix pipeline: −4% progress, +6% next sprint | Manual deploy: −4% quality |
 | Manager Micromanagement | managerCount ≥ 2, devCount ≥ 1 | Coach manager: +5% quality | Let manager go: lose 1 manager |
 
 **Design principles:**
-- No dominant strategy — each choice favors speed, quality, or cost differently
+- No dominant strategy — every choice has a cost, even "safe" ones
 - Effects are proportional to per-sprint output (progress ~0.2–0.6/sprint, quality 0.3–1.0 range)
 - Team-removal crises require ≥2 of that role (never leaves the player with zero)
-- "No change" options always exist as a safe but opportunity-costly choice
+- Counter-offer crises require sufficient cash to fund the offer
+- After resolving a crisis, a brief outcome toast shows the consequence of the player's choice
 
 ---
 

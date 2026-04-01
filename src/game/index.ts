@@ -87,6 +87,7 @@ function createInitialState(seed: string): GameState {
     result: null,
     seed,
     pendingCrisis: null,
+    crisisOutcome: null,
     crisesResolved: [],
     progressBonus: 0,
   }
@@ -264,6 +265,7 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
               choices: state.pendingCrisis.choices.map((c) => ({ ...c })),
             }
           : null,
+        crisisOutcome: state.crisisOutcome,
         crisesResolved: [...state.crisesResolved],
         progressBonus: state.progressBonus,
       }
@@ -319,7 +321,10 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
 
     resolveCrisis(choiceId: string) {
       const teamSizeBefore = state.team.length
-      applyCrisisChoice(state, choiceId)
+      const summary = applyCrisisChoice(state, choiceId)
+
+      // Store outcome for the UI toast
+      state.crisisOutcome = summary || null
 
       // Only respawn workers if a crisis removed a team member
       if (state.team.length !== teamSizeBefore) {
