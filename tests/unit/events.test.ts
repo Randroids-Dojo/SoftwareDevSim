@@ -453,17 +453,15 @@ describe('selectCrisis', () => {
   })
 
   it('excludes already-resolved crises', () => {
-    // Resolve all crises except one
+    // Resolve all crises except tech_debt; progress 0.5 meets its precondition (>= 0.15)
     const allIds = CRISIS_CATALOG.map((c) => c.id)
     const state = makeState({
       crisesResolved: allIds.filter((id) => id !== 'tech_debt'),
       progress: 0.5,
     })
     const crisis = selectCrisis(state)
-    if (crisis) {
-      assert.equal(crisis.id, 'tech_debt')
-    }
-    // If null, it means tech_debt precondition wasn't met — that's fine
+    assert.ok(crisis, 'Expected unresolved tech_debt crisis to be selected')
+    assert.equal(crisis.id, 'tech_debt')
   })
 
   it('is deterministic with the same seed and sprint', () => {
@@ -528,7 +526,7 @@ describe('applyCrisisChoice', () => {
     assert.equal(summary, '')
   })
 
-  it('returns empty string for unknown crisis id', () => {
+  it('recovers from unknown crisis id by clearing pendingCrisis', () => {
     const state = makeState()
     state.pendingCrisis = {
       id: 'nonexistent',
@@ -542,6 +540,9 @@ describe('applyCrisisChoice', () => {
     }
     const summary = applyCrisisChoice(state, 'a')
     assert.equal(summary, '')
+    // Should clear pendingCrisis and add to resolved so game can continue
+    assert.equal(state.pendingCrisis, null)
+    assert.ok(state.crisesResolved.includes('nonexistent'))
   })
 
   it('returns empty string for invalid choiceId', () => {

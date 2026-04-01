@@ -543,15 +543,24 @@ function SprintOverlay({ snapshot, game }: { snapshot: GameState; game: GameActi
 // --- Crisis Modal ---
 
 function CrisisModal({ crisis, game }: { crisis: Crisis; game: GameActions }) {
+  const titleId = `crisis-title-${crisis.id}`
+
   return (
-    <div className="absolute inset-0 z-[35] flex items-center justify-center pointer-events-none">
-      <div className="absolute inset-0 bg-black/60" />
+    <div
+      className="absolute inset-0 z-[35] flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+    >
+      <div className="absolute inset-0 bg-black/60 pointer-events-auto" />
       <div className="relative z-50 pointer-events-auto max-w-lg w-full mx-4">
         <div className="bg-gray-800 border border-amber-500/50 rounded-lg p-6 shadow-2xl">
           {/* Header */}
           <div className="flex items-center gap-2 mb-3">
             <span className="text-amber-400 text-xl">&#x26A0;</span>
-            <h3 className="text-xl font-bold text-white">{crisis.title}</h3>
+            <h3 id={titleId} className="text-xl font-bold text-white">
+              {crisis.title}
+            </h3>
           </div>
 
           {/* Narrative */}

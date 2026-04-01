@@ -320,18 +320,24 @@ export function createGame(canvas: HTMLCanvasElement): GameInstance {
     },
 
     resolveCrisis(choiceId: string) {
+      const hadPendingCrisis = state.pendingCrisis !== null
       const teamSizeBefore = state.team.length
       const summary = applyCrisisChoice(state, choiceId)
+      const crisisResolved = hadPendingCrisis && state.pendingCrisis === null
 
-      // Store outcome for the UI toast
-      state.crisisOutcome = summary || null
+      if (crisisResolved) {
+        state.crisisOutcome = summary || null
+      }
 
       // Only respawn workers if a crisis removed a team member
       if (state.team.length !== teamSizeBefore) {
         instance.spawnWorkers(state.team)
       }
 
-      state.clock.paused = false
+      // Only unpause when the crisis was actually resolved
+      if (crisisResolved) {
+        state.clock.paused = false
+      }
     },
   }
 

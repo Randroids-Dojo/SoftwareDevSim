@@ -26,7 +26,13 @@ function averageEnergy(team: WorkerState[]): number {
 }
 
 function removeLastWorkerByRole(team: WorkerState[], role: WorkerState['role']): WorkerState[] {
-  const lastIndex = team.findLastIndex((w) => w.role === role)
+  let lastIndex = -1
+  for (let i = team.length - 1; i >= 0; i--) {
+    if (team[i].role === role) {
+      lastIndex = i
+      break
+    }
+  }
   if (lastIndex < 0) return team
   return [...team.slice(0, lastIndex), ...team.slice(lastIndex + 1)]
 }
@@ -319,7 +325,12 @@ export function applyCrisisChoice(state: GameState, choiceId: string): string {
   if (!crisis) return ''
 
   const definition = CRISIS_CATALOG.find((c) => c.id === crisis.id)
-  if (!definition) return ''
+  if (!definition) {
+    // Recover from unknown crisis by clearing it so the game can continue
+    state.crisesResolved.push(crisis.id)
+    state.pendingCrisis = null
+    return ''
+  }
 
   // Validate that the choiceId is one of the offered options
   if (!crisis.choices.some((c) => c.id === choiceId)) return ''

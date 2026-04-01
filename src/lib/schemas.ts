@@ -94,8 +94,8 @@ export const GameStateSchema = z.object({
   quality: z.number().min(0).max(1),
   result: GameResultSchema.nullable(),
   seed: z.string().min(1),
-  pendingCrisis: CrisisSchema.nullable(),
-  crisisOutcome: z.string().nullable(),
-  crisesResolved: z.array(z.string()),
-  progressBonus: z.number(),
+  pendingCrisis: CrisisSchema.nullable().default(null),
+  crisisOutcome: z.string().nullable().default(null),
+  crisesResolved: z.array(z.string().min(1)).default([]),
+  progressBonus: z.number().min(0).default(0),
 })
