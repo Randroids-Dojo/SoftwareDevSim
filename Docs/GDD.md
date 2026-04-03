@@ -34,10 +34,10 @@ You're a startup founder who gets to experiment with different team compositions
 ### Core Loop
 
 ```
-Choose App → Hire Team → Watch 4 Sprints → See Results → Retry
+Choose App → Hire Team → Play 4 Sprints (with crises) → See Results → Retry
 ```
 
-The player picks an app to build, allocates budget across roles, and watches the office animate through 4 sprints. At the end, they see a letter grade, cost/revenue breakdown, and can retry with a different strategy.
+The player picks an app to build, allocates budget across roles, and watches the office animate through 4 sprints. Between sprints, narrative crises interrupt and force strategic decisions. At the end, they see a letter grade, cost/revenue breakdown, and can retry with a different strategy.
 
 ### Win/Loss Conditions
 
@@ -120,6 +120,34 @@ A phone-screen mockup shows the app the team is building. The player can **click
 | Fitness Tracker | Blank dashboard | Workout log, stats charts, activity rings |
 | E-Commerce Platform | "Under construction" page | Product grid, cart, checkout form |
 
+### Sprint Crises
+
+At each sprint boundary (after sprints 0, 1, and 2 complete), a **crisis** may interrupt the game — a narrative event that pauses the simulation and forces the player to choose between two options with real trade-offs. Crises add mid-game agency: instead of passively watching, the player actively manages the unexpected.
+
+**Timing:** Up to 3 crises per game (one per sprint boundary, except the final sprint). Selection uses seeded RNG — same seed produces same crises. No crisis fires if no preconditions are met.
+
+**Contextual validity:** Each crisis has preconditions checked against current game state. A "Star Developer Poached" crisis only fires if you have ≥2 developers. A "Security Vulnerability" only fires if progress ≥ 30%. This ensures crises are always narratively coherent.
+
+| Crisis | Precondition | Choice A | Choice B |
+|--------|-------------|----------|----------|
+| Technical Debt Pileup | progress ≥ 15% | Refactor: +10% quality, −5% progress | Push through: −8% quality |
+| Star Developer Poached | devCount ≥ 2, cash ≥ $25K | Counter-offer: −$25K cash | Let them go: lose 1 dev |
+| Scope Creep | sprint ≥ 1 | Accept: −10% progress, +5% quality | Push back: −3% quality |
+| Open-Source Goldmine | devCount ≥ 1 | Adopt: +8% progress, −5% quality | Build in-house: +5% quality |
+| Team Burnout | avg energy < 50% | Rest day: restore energy, −3% progress | Push through: −6% quality |
+| Security Vulnerability | progress ≥ 30% | Fix now: −6% progress | Workaround: −10% quality |
+| Designer Breakthrough | designerCount ≥ 1, quality < 80% | Redesign: +15% quality, −6% progress | Stay the course: −3% progress |
+| Investor Interest | progress ≥ 20% | Take money: +$40K, −5% progress | Stay independent: −2% quality |
+| CI/CD Pipeline Down | devCount ≥ 1, sprint ≥ 1 | Fix pipeline: −4% progress, +6% next sprint | Manual deploy: −4% quality |
+| Manager Micromanagement | managerCount ≥ 2, devCount ≥ 1 | Coach manager: +5% quality | Let manager go: lose 1 manager |
+
+**Design principles:**
+- No dominant strategy — every choice has a cost, even "safe" ones
+- Effects are proportional to per-sprint output (progress ~0.2–0.6/sprint, quality 0.3–1.0 range)
+- Team-removal crises require ≥2 of that role (never leaves the player with zero)
+- Counter-offer crises require sufficient cash to fund the offer
+- After resolving a crisis, a brief outcome toast shows the consequence of the player's choice
+
 ---
 
 ## 4. World & Setting
@@ -190,8 +218,11 @@ AppChoice:   id, name, description, complexity, estimatedSprints, revenuePotenti
 
 SprintState: current (0-3), total (4), dayInSprint, daysPerSprint (5)
 
+Crisis:      id, title, narrative, choices[], triggeredAtSprint
+
 GameState:   phase, cash, chosenApp, team[], sprint, clock,
-             progress (0-1), quality (0-1), result, seed
+             progress (0-1), quality (0-1), result, seed,
+             pendingCrisis, crisisOutcome, crisesResolved[], progressBonus
 ```
 
 ### State Management
@@ -215,8 +246,9 @@ GameState:   phase, cash, chosenApp, team[], sprint, clock,
 Progress and quality are calculated once per sprint completion (not per-tick). Each sprint:
 1. Clock ticks at selected speed (default 100×)
 2. Workers animate based on role (devs type, POs visit whiteboard, managers hold meetings)
-3. After 5 game days: sprint completes, progress/quality updated
-4. After 4 sprints: result calculated, end screen shown
+3. After 5 game days: sprint completes, progress/quality updated, deferred bonuses applied
+4. Between sprints 1–3: a crisis may trigger (game pauses, player chooses, effects apply, outcome toast shown)
+5. After 4 sprints: result calculated, end screen shown
 
 ---
 
@@ -230,6 +262,8 @@ Progress and quality are calculated once per sprint completion (not per-tick). E
 | **App Selection** | 3 cards: Todo App, Fitness Tracker, E-Commerce Platform |
 | **Hire Team** | +/- controls for each role, live budget tracking |
 | **Sprint Overlay** | Sprint counter, day progress bar, overall progress bar |
+| **Crisis Modal** | Narrative text, 2 choice buttons with effect descriptions (amber-themed, z-[35]) |
+| **Crisis Outcome Toast** | Brief summary of crisis resolution (auto-dismisses after 4s) |
 | **End Screen** | Letter grade, completion %, quality %, cost/revenue/ROI breakdown, Retry button |
 
 All screens render as overlays on top of the 3D office canvas.
@@ -293,6 +327,7 @@ Free and open source.
 | Basic Game Loop | Choose app, hire team, auto-play 4 sprints, end screen with grading | Done |
 | Standup/Standdown | Daily team ceremonies with circle formation and chat bubbles | Done |
 | App Demo Preview | Live phone mockup showing the app being built, quality-dependent glitches | Done |
+| Sprint Crises | Mid-game narrative events with contextual preconditions and player choices | Done |
 
 ---
 

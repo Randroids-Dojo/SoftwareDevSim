@@ -4,6 +4,7 @@ import type {
   ActivityStateSchema,
   AppChoiceSchema,
   ComplexitySchema,
+  CrisisSchema,
   GameClockSchema,
   GamePhaseSchema,
   GameResultSchema,
@@ -23,6 +24,7 @@ export type ActivityState = z.infer<typeof ActivityStateSchema>
 export type GamePhase = z.infer<typeof GamePhaseSchema>
 export type Grade = z.infer<typeof GradeSchema>
 export type Complexity = z.infer<typeof ComplexitySchema>
+export type Crisis = z.infer<typeof CrisisSchema>
 export type WorkerState = z.infer<typeof WorkerStateSchema>
 export type AppChoice = z.infer<typeof AppChoiceSchema>
 export type SprintState = z.infer<typeof SprintStateSchema>
@@ -60,4 +62,6 @@ export interface GameInstance {
   applyRotationDelta(deltaRadians: number): void
   /** Reset camera to default position and zoom. */
   resetCamera(): void
+  /** Resolve the pending crisis by applying the chosen option. */
+  resolveCrisis(choiceId: string): void
 }

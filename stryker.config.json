@@ -9,6 +9,7 @@
   "tsconfigFile": "tsconfig.json",
   "mutate": [
     "src/game/scoring.ts",
+    "src/game/events.ts",
     "src/game/simulation/**/*.ts",
     "src/game/character/needs.ts",
     "src/game/character/schedule.ts",
